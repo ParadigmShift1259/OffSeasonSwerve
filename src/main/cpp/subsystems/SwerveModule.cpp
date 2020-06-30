@@ -24,6 +24,8 @@ SwerveModule::SwerveModule(int driveMotorChannel, int turningMotorChannel,
       m_reverseDriveEncoder(driveEncoderReversed),
       m_reverseTurningEncoder(turningEncoderReversed)
 {
+  m_driveEncoder.SetVelocityConversionFactor(ModuleConstants::kWheelDiameterMeters / 60); // GetVelocity() will return meters per sec instead of RPM
+
   // Limit the PID Controller's input range between -pi and pi and set the input
   // to be continuous.
   m_turningPIDController.EnableContinuousInput(radian_t(-wpi::math::pi), radian_t(wpi::math::pi));
@@ -31,13 +33,13 @@ SwerveModule::SwerveModule(int driveMotorChannel, int turningMotorChannel,
 
 frc::SwerveModuleState SwerveModule::GetState()
 {
-  return {meters_per_second_t{m_driveEncoder.GetCPR()}, frc::Rotation2d(radian_t(m_turningEncoder.Get()))};
+  return {meters_per_second_t{m_driveEncoder.GetVelocity()}, frc::Rotation2d(radian_t(m_turningEncoder.Get()))};
 }
 
 void SwerveModule::SetDesiredState(frc::SwerveModuleState& state)
 {
   // Calculate the drive output from the drive PID controller.
-  const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetRate(), state.speed.to<double>());
+  const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
 
   // Calculate the turning motor output from the turning PID controller.
   auto turnOutput = m_turningPIDController.Calculate(radian_t(m_turningEncoder.Get()), state.angle.Radians());
