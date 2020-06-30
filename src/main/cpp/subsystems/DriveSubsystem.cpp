@@ -15,89 +15,110 @@
 using namespace DriveConstants;
 
 DriveSubsystem::DriveSubsystem()
-    : m_frontLeft{kFrontLeftDriveMotorPort,
-                  kFrontLeftTurningMotorPort,
-                  kFrontLeftDriveEncoderPorts,
-                  kFrontLeftTurningEncoderPorts,
-                  kFrontLeftDriveEncoderReversed,
-                  kFrontLeftTurningEncoderReversed},
+    : m_frontLeft{ kFrontLeftDriveMotorPort
+                  ,kFrontLeftTurningMotorPort
+                  ,kFrontLeftDriveEncoderPorts
+                  ,kFrontLeftTurningEncoderPorts
+                  ,kFrontLeftDriveEncoderReversed
+                  ,kFrontLeftTurningEncoderReversed},
 
-      m_rearLeft{
-          kRearLeftDriveMotorPort,       kRearLeftTurningMotorPort,
-          kRearLeftDriveEncoderPorts,    kRearLeftTurningEncoderPorts,
-          kRearLeftDriveEncoderReversed, kRearLeftTurningEncoderReversed},
+      m_frontRight{ kFrontRightDriveMotorPort
+                  , kFrontRightTurningMotorPort
+                  , kFrontRightDriveEncoderPorts
+                  , kFrontRightTurningEncoderPorts
+                  , kFrontRightDriveEncoderReversed
+                  , kFrontRightTurningEncoderReversed},
 
-      m_frontRight{
-          kFrontRightDriveMotorPort,       kFrontRightTurningMotorPort,
-          kFrontRightDriveEncoderPorts,    kFrontRightTurningEncoderPorts,
-          kFrontRightDriveEncoderReversed, kFrontRightTurningEncoderReversed},
+      m_rearRight{  kRearRightDriveMotorPort
+                  , kRearRightTurningMotorPort
+                  , kRearRightDriveEncoderPorts
+                  , kRearRightTurningEncoderPorts
+                  , kRearRightDriveEncoderReversed
+                  , kRearRightTurningEncoderReversed},
 
-      m_rearRight{
-          kRearRightDriveMotorPort,       kRearRightTurningMotorPort,
-          kRearRightDriveEncoderPorts,    kRearRightTurningEncoderPorts,
-          kRearRightDriveEncoderReversed, kRearRightTurningEncoderReversed},
+      m_rearLeft{ kRearLeftDriveMotorPort
+                , kRearLeftTurningMotorPort
+                , kRearLeftDriveEncoderPorts
+                , kRearLeftTurningEncoderPorts
+                , kRearLeftDriveEncoderReversed
+                , kRearLeftTurningEncoderReversed},
 
-      m_odometry{kDriveKinematics,
-                 frc::Rotation2d(units::degree_t(GetHeading())),
-                 frc::Pose2d()} {}
-
-void DriveSubsystem::Periodic() {
-  // Implementation of subsystem periodic method goes here.
-  m_odometry.Update(frc::Rotation2d(units::degree_t(GetHeading())),
-                    m_frontLeft.GetState(), m_rearLeft.GetState(),
-                    m_frontRight.GetState(), m_rearRight.GetState());
+      m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
+{
 }
 
-void DriveSubsystem::Drive(units::meters_per_second_t xSpeed,
-                           units::meters_per_second_t ySpeed,
-                           units::radians_per_second_t rot,
-                           bool fieldRelative) {
-  auto states = kDriveKinematics.ToSwerveModuleStates(
-      fieldRelative ? frc::ChassisSpeeds::FromFieldRelativeSpeeds(
-                          xSpeed, ySpeed, rot,
-                          frc::Rotation2d(units::degree_t(GetHeading())))
-                    : frc::ChassisSpeeds{xSpeed, ySpeed, rot});
+void DriveSubsystem::Periodic()
+{
+  // Implementation of subsystem periodic method goes here.
+  m_odometry.Update(  GetHeadingAsRot2d()
+                    , m_frontLeft.GetState()
+                    , m_rearLeft.GetState()   // TODO check order FL, RL?
+                    , m_frontRight.GetState()
+                    , m_rearRight.GetState());
+}
+
+void DriveSubsystem::Drive(  meters_per_second_t xSpeed
+                           , meters_per_second_t ySpeed
+                           , radians_per_second_t rot
+                           , bool fieldRelative)
+{
+  frc::ChassisSpeeds chassisSpeeds;
+  if (fieldRelative)
+  {
+    chassisSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xSpeed, ySpeed, rot, GetHeadingAsRot2d());
+  }
+  else
+  {
+    chassisSpeeds = frc::ChassisSpeeds{xSpeed, ySpeed, rot};
+  }
+  auto states = kDriveKinematics.ToSwerveModuleStates(chassisSpeeds);
 
   kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
-
-  auto [fl, fr, bl, br] = states;
-
-  m_frontLeft.SetDesiredState(fl);
-  m_frontRight.SetDesiredState(fr);
-  m_rearLeft.SetDesiredState(bl);
-  m_rearRight.SetDesiredState(br);
+      
+  m_frontLeft.SetDesiredState(states[eFrontLeft]);
+  m_frontRight.SetDesiredState(states[eFrontRight]);
+  m_rearLeft.SetDesiredState(states[eRearRight]);
+  m_rearRight.SetDesiredState(states[eRearLeft]);
 }
 
-void DriveSubsystem::SetModuleStates(
-    std::array<frc::SwerveModuleState, 4> desiredStates) {
-  kDriveKinematics.NormalizeWheelSpeeds(&desiredStates,
-                                        AutoConstants::kMaxSpeed);
-  m_frontLeft.SetDesiredState(desiredStates[0]);
-  m_rearLeft.SetDesiredState(desiredStates[1]);
-  m_frontRight.SetDesiredState(desiredStates[2]);
-  m_rearRight.SetDesiredState(desiredStates[3]);
+void DriveSubsystem::SetModuleStates(SwerveModuleStates desiredStates) 
+{
+  kDriveKinematics.NormalizeWheelSpeeds(&desiredStates, AutoConstants::kMaxSpeed);
+  m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
+  m_frontRight.SetDesiredState(desiredStates[eFrontRight]);
+  m_rearRight.SetDesiredState(desiredStates[eRearRight]);
+  m_rearLeft.SetDesiredState(desiredStates[eRearLeft]);
 }
 
-void DriveSubsystem::ResetEncoders() {
+void DriveSubsystem::ResetEncoders() 
+{
   m_frontLeft.ResetEncoders();
-  m_rearLeft.ResetEncoders();
   m_frontRight.ResetEncoders();
   m_rearRight.ResetEncoders();
+  m_rearLeft.ResetEncoders();
 }
 
-double DriveSubsystem::GetHeading() {
-  return std::remainder(m_gyro.GetAngle(), 360) * (kGyroReversed ? -1. : 1.);
+double DriveSubsystem::GetHeading() 
+{
+  return 0.0;//std::remainder(m_gyro.GetAngle(), 360) * (kGyroReversed ? -1. : 1.);
 }
 
-void DriveSubsystem::ZeroHeading() { m_gyro.Reset(); }
-
-double DriveSubsystem::GetTurnRate() {
-  return m_gyro.GetRate() * (kGyroReversed ? -1. : 1.);
+void DriveSubsystem::ZeroHeading()
+{
+   //m_gyro.Reset();
 }
 
-frc::Pose2d DriveSubsystem::GetPose() { return m_odometry.GetPose(); }
+double DriveSubsystem::GetTurnRate()
+{
+  return 0.0;//m_gyro.GetRate() * (kGyroReversed ? -1. : 1.);
+}
 
-void DriveSubsystem::ResetOdometry(frc::Pose2d pose) {
-  m_odometry.ResetPosition(pose,
-                           frc::Rotation2d(units::degree_t(GetHeading())));
+frc::Pose2d DriveSubsystem::GetPose()
+{
+   return m_odometry.GetPose();
+}
+
+void DriveSubsystem::ResetOdometry(frc::Pose2d pose)
+{
+  m_odometry.ResetPosition(pose, GetHeadingAsRot2d());
 }
