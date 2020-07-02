@@ -18,9 +18,11 @@
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc/kinematics/SwerveDriveOdometry.h>
 #include <frc2/command/SubsystemBase.h>
+#include <ctre/phoenix.h>
 
 #include "Constants.h"
 #include "SwerveModule.h"
+
 
 class DriveSubsystem : public frc2::SubsystemBase
 {
@@ -29,8 +31,8 @@ public:
     {
         eFrontLeft,
         eFrontRight,
-        eRearRight,
-        eRearLeft
+        eRearLeft,
+        eRearRight
     };
     DriveSubsystem();
 
@@ -97,4 +99,5 @@ private:
     // Odometry class for tracking robot pose
     // 4 defines the number of modules
     frc::SwerveDriveOdometry<4> m_odometry;
+    //ctre::PidgeonIMU::m_gyro;
 };

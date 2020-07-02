@@ -11,8 +11,12 @@
 #include <units/units.h>
 
 #include "Constants.h"
+#include <iostream>
+#include <frc/SmartDashBoard/SmartDashboard.h>
 
 using namespace DriveConstants;
+using namespace std;
+using namespace frc;
 
 DriveSubsystem::DriveSubsystem()
     : m_frontLeft{
@@ -56,8 +60,16 @@ DriveSubsystem::DriveSubsystem()
         },
 
       m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
+      //,m_gyro(0)
 {
+   /*
+    SmartDashboard::PutNumber("FrontRight", 0.0);
+    SmartDashboard::PutNumber("FrontLeft", 0.0);
+    SmartDashboard::PutNumber("RearRight", 0.0);
+    SmartDashboard::PutNumber("RearLeft", 0.0);
+    */
 }
+
 
 void DriveSubsystem::Periodic()
 {
@@ -78,20 +90,45 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
     auto states = kDriveKinematics.ToSwerveModuleStates(chassisSpeeds);
 
     kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
+    
+    double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
+    states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
 
+    angle = SmartDashboard::GetNumber("FrontRight", 0.0);
+    states[eFrontRight].angle = frc::Rotation2d(radian_t(angle));
+
+    angle = SmartDashboard::GetNumber("RearLeft", 0.0);
+    states[eRearLeft].angle = frc::Rotation2d(radian_t(angle));
+
+    angle = SmartDashboard::GetNumber("RearRight", 0.0);
+    states[eRearRight].angle = frc::Rotation2d(radian_t(angle));
+
+
+    cout<<"Drive() ";
+    cout<<" FrontLeft Angle: "<< states[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)states[eFrontLeft].speed;
+    cout<<" FrontRight Angle: "<< states[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)states[eFrontRight].speed;
+    cout<<" RearRight Angle: "<< states[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)states[eRearRight].speed;
+    cout<<" RearLeft Angle: "<< states[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)states[eRearLeft].speed;
+    cout<<"\n";
     m_frontLeft.SetDesiredState(states[eFrontLeft]);
     m_frontRight.SetDesiredState(states[eFrontRight]);
-    m_rearLeft.SetDesiredState(states[eRearRight]);
-    m_rearRight.SetDesiredState(states[eRearLeft]);
+    m_rearLeft.SetDesiredState(states[eRearLeft]);
+    m_rearRight.SetDesiredState(states[eRearRight]);
 }
 
 void DriveSubsystem::SetModuleStates(SwerveModuleStates desiredStates)
 {
     kDriveKinematics.NormalizeWheelSpeeds(&desiredStates, AutoConstants::kMaxSpeed);
-    m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
+    cout<<"SetModuleStates() ";
+    cout<<" FrontLeft Angle: "<< desiredStates[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)desiredStates[eFrontLeft].speed;
+    cout<<" FrontRight Angle: "<< desiredStates[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)desiredStates[eFrontRight].speed;
+    cout<<" RearRight Angle: "<< desiredStates[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)desiredStates[eRearRight].speed;
+    cout<<" RearLeft Angle: "<< desiredStates[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)desiredStates[eRearLeft].speed;
+    cout<<"\n";
+    //m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
     m_frontRight.SetDesiredState(desiredStates[eFrontRight]);
-    m_rearRight.SetDesiredState(desiredStates[eRearRight]);
-    m_rearLeft.SetDesiredState(desiredStates[eRearLeft]);
+    //m_rearRight.SetDesiredState(desiredStates[eRearRight]);
+    //m_rearLeft.SetDesiredState(desiredStates[eRearLeft]);
 }
 
 void DriveSubsystem::ResetEncoders()

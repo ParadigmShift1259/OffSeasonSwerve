@@ -85,7 +85,7 @@ namespace ModuleConstants
     // Assumes the encoders are directly mounted on the wheel shafts
     constexpr double kTurningEncoderDistancePerPulse = (wpi::math::pi * 2) / static_cast<double>(kEncoderCPR);
 
-    constexpr double kPModuleTurningController = 1;
+    constexpr double kPModuleTurningController = .01;
     constexpr double kPModuleDriveController = 1;
 }  // namespace ModuleConstants
 
@@ -93,10 +93,10 @@ namespace AutoConstants
 {
     using radians_per_second_squared_t = units::compound_unit<units::radians, units::inverse<units::squared<units::second>>>;
 
-    constexpr auto kMaxSpeed = units::meters_per_second_t(3);
-    constexpr auto kMaxAcceleration = units::meters_per_second_squared_t(3);
-    constexpr auto kMaxAngularSpeed = units::radians_per_second_t(3.142);
-    constexpr auto kMaxAngularAcceleration = units::unit_t<radians_per_second_squared_t>(3.142);
+    constexpr auto kMaxSpeed = 0.1 * units::meters_per_second_t(3);
+    constexpr auto kMaxAcceleration = 0.1 *  units::meters_per_second_squared_t(3);
+    constexpr auto kMaxAngularSpeed = 0.1 *  units::radians_per_second_t(3.142);
+    constexpr auto kMaxAngularAcceleration = 0.1 *  units::unit_t<radians_per_second_squared_t>(3.142);
 
     constexpr double kPXController = 0.5;
     constexpr double kPYController = 0.5;

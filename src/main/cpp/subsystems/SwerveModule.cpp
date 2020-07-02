@@ -9,6 +9,7 @@
 
 #include <frc/geometry/Rotation2d.h>
 #include <wpi/math>
+#include <iostream>
 
 #include "Constants.h"
 
@@ -49,18 +50,27 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     double angle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
     auto turnOutput = m_turningPIDController.Calculate(radian_t(angle), state.angle.Radians());
 
+    std::cout<<"TurnOutput " << turnOutput << "\n";
     // Set the motor outputs.
-    m_driveMotor.Set(driveOutput);
+    //m_driveMotor.Set(driveOutput);
+    m_driveMotor.Set(0);
     m_turningMotor.Set(turnOutput);
 }
 
 void SwerveModule::ResetEncoders()
 {
-    m_driveEncoder.SetPosition(0.0);
+    m_driveEncoder.SetPosition(0.0); 
     //m_turningEncoder.SetPosition(0.0);
 }
 
 double SwerveModule::VoltageToRadians(double Voltage, double OffSet)
 {
-    fmod(Voltage * DriveConstants::kTurnVoltageToRadians - OffSet + 2 * wpi::math::pi, 2 * wpi::math::pi);
+    double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - OffSet + 2 * wpi::math::pi, 2 * wpi::math::pi);
+
+    if (angle > wpi::math::pi)
+    {
+        angle -= 2 * wpi::math::pi;
+    }
+
+    return angle;
 }
