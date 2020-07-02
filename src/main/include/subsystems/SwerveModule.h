@@ -27,7 +27,7 @@ class SwerveModule
     using radians_per_second_squared_t = compound_unit<radians, inverse<squared<second>>>;
 
 public:
-    SwerveModule(int driveMotorChannel, int turningMotorChannel, const int driveEncoderPorts[2], const int turningEncoderPorts[2], bool driveEncoderReversed, bool turningEncoderReversed);
+    SwerveModule(int driveMotorChannel, int turningMotorChannel, const int driveEncoderPorts[2], const int turningEncoderPorts[2], bool driveEncoderReversed, bool turningEncoderReversed, double offSet);
 
     frc::SwerveModuleState GetState();
 
@@ -36,6 +36,8 @@ public:
     void ResetEncoders();
 
 private:
+    double VoltageToRadians(double Voltage, double OffSet);
+
     // We have to use meters here instead of radians due to the fact that
     // ProfiledPIDController's constraints only take in meters per second and
     // meters per second squared.
@@ -59,4 +61,6 @@ private:
         0.0,
         0.0,
         {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}};
+
+    double m_offSet;
 };

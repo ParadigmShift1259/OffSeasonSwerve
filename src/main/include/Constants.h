@@ -72,6 +72,7 @@ namespace DriveConstants
     constexpr double kPRearLeftVel = 0.5;
     constexpr double kPFrontRightVel = 0.5;
     constexpr double kPRearRightVel = 0.5;
+    constexpr double kTurnVoltageToRadians = 2.0 * wpi::math::pi / 4.93;
 }  // namespace DriveConstants
 
 namespace ModuleConstants

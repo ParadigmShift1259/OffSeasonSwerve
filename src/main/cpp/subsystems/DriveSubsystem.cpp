@@ -21,7 +21,8 @@ DriveSubsystem::DriveSubsystem()
         kFrontLeftDriveEncoderPorts,
         kFrontLeftTurningEncoderPorts,
         kFrontLeftDriveEncoderReversed,
-        kFrontLeftTurningEncoderReversed
+        kFrontLeftTurningEncoderReversed,
+        3.11
         },
 
       m_frontRight{
@@ -30,7 +31,8 @@ DriveSubsystem::DriveSubsystem()
         kFrontRightDriveEncoderPorts,
         kFrontRightTurningEncoderPorts,
         kFrontRightDriveEncoderReversed,
-        kFrontRightTurningEncoderReversed
+        kFrontRightTurningEncoderReversed,
+        5.07
         },
 
       m_rearRight{
@@ -39,7 +41,9 @@ DriveSubsystem::DriveSubsystem()
         kRearRightDriveEncoderPorts,
         kRearRightTurningEncoderPorts,
         kRearRightDriveEncoderReversed,
-        kRearRightTurningEncoderReversed},
+        kRearRightTurningEncoderReversed,
+        0.50
+        },
 
       m_rearLeft{
         kRearLeftDriveMotorPort,
@@ -47,7 +51,8 @@ DriveSubsystem::DriveSubsystem()
         kRearLeftDriveEncoderPorts,
         kRearLeftTurningEncoderPorts,
         kRearLeftDriveEncoderReversed,
-        kRearLeftTurningEncoderReversed
+        kRearLeftTurningEncoderReversed,
+        4.92
         },
 
       m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
