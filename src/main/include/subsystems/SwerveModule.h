@@ -24,44 +24,39 @@ using namespace units;
 
 class SwerveModule
 {
-  using radians_per_second_squared_t = compound_unit<radians, inverse<squared<second>>>;
+    using radians_per_second_squared_t = compound_unit<radians, inverse<squared<second>>>;
 
- public:
-  SwerveModule(   int driveMotorChannel
-                , int turningMotorChannel
-                , const int driveEncoderPorts[2]
-                , const int turningEncoderPorts[2]
-                , bool driveEncoderReversed
-                , bool turningEncoderReversed);
+public:
+    SwerveModule(int driveMotorChannel, int turningMotorChannel, const int driveEncoderPorts[2], const int turningEncoderPorts[2], bool driveEncoderReversed, bool turningEncoderReversed);
 
-  frc::SwerveModuleState GetState();
+    frc::SwerveModuleState GetState();
 
-  void SetDesiredState(frc::SwerveModuleState& state);
+    void SetDesiredState(frc::SwerveModuleState &state);
 
-  void ResetEncoders();
+    void ResetEncoders();
 
- private:
-  // We have to use meters here instead of radians due to the fact that
-  // ProfiledPIDController's constraints only take in meters per second and
-  // meters per second squared.
+private:
+    // We have to use meters here instead of radians due to the fact that
+    // ProfiledPIDController's constraints only take in meters per second and
+    // meters per second squared.
 
-  static constexpr radians_per_second_t kModuleMaxAngularVelocity = radians_per_second_t(wpi::math::pi);  // radians per second
-  static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0);  // radians per second squared
-  
-  CANSparkMax m_driveMotor;
-  CANSparkMax m_turningMotor;
+    static constexpr radians_per_second_t kModuleMaxAngularVelocity = radians_per_second_t(wpi::math::pi);                                           // radians per second
+    static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0); // radians per second squared
 
-  CANEncoder m_driveEncoder;
-  frc::AnalogInput m_turningEncoder;
+    CANSparkMax m_driveMotor;
+    CANSparkMax m_turningMotor;
 
-  bool m_reverseDriveEncoder;
-  bool m_reverseTurningEncoder;
+    CANEncoder m_driveEncoder;
+    frc::AnalogInput m_turningEncoder;
 
-  frc2::PIDController m_drivePIDController{ ModuleConstants::kPModuleDriveController, 0, 0 };
-      
-  frc::ProfiledPIDController<radians> m_turningPIDController{
-      ModuleConstants::kPModuleTurningController,
-      0.0,
-      0.0,
-      {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}};
+    bool m_reverseDriveEncoder;
+    bool m_reverseTurningEncoder;
+
+    frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
+
+    frc::ProfiledPIDController<radians> m_turningPIDController{
+        ModuleConstants::kPModuleTurningController,
+        0.0,
+        0.0,
+        {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}};
 };

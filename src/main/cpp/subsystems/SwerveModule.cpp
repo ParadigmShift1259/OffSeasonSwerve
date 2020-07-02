@@ -18,39 +18,39 @@ SwerveModule::SwerveModule(int driveMotorChannel, int turningMotorChannel,
                            bool driveEncoderReversed,
                            bool turningEncoderReversed)
     : m_driveMotor(driveMotorChannel, CANSparkMax::MotorType::kBrushless),
-      m_turningMotor(turningMotorChannel, CANSparkMax::MotorType::kBrushless),
-      m_driveEncoder(m_driveMotor),
-      m_turningEncoder(turningEncoderPorts[0]),
-      m_reverseDriveEncoder(driveEncoderReversed),
-      m_reverseTurningEncoder(turningEncoderReversed)
+        m_turningMotor(turningMotorChannel, CANSparkMax::MotorType::kBrushless),
+        m_driveEncoder(m_driveMotor),
+        m_turningEncoder(turningEncoderPorts[0]),
+        m_reverseDriveEncoder(driveEncoderReversed),
+        m_reverseTurningEncoder(turningEncoderReversed)
 {
-  m_driveEncoder.SetVelocityConversionFactor(ModuleConstants::kWheelDiameterMeters / 60); // GetVelocity() will return meters per sec instead of RPM
+    m_driveEncoder.SetVelocityConversionFactor(ModuleConstants::kWheelDiameterMeters / 60); // GetVelocity() will return meters per sec instead of RPM
 
-  // Limit the PID Controller's input range between -pi and pi and set the input
-  // to be continuous.
-  m_turningPIDController.EnableContinuousInput(radian_t(-wpi::math::pi), radian_t(wpi::math::pi));
+    // Limit the PID Controller's input range between -pi and pi and set the input
+    // to be continuous.
+    m_turningPIDController.EnableContinuousInput(radian_t(-wpi::math::pi), radian_t(wpi::math::pi));
 }
 
 frc::SwerveModuleState SwerveModule::GetState()
 {
-  return {meters_per_second_t{m_driveEncoder.GetVelocity()}, frc::Rotation2d(radian_t(m_turningEncoder.Get()))};
+    return {meters_per_second_t{m_driveEncoder.GetVelocity()}, frc::Rotation2d(radian_t(m_turningEncoder.Get()))};
 }
 
-void SwerveModule::SetDesiredState(frc::SwerveModuleState& state)
+void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 {
-  // Calculate the drive output from the drive PID controller.
-  const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
+    // Calculate the drive output from the drive PID controller.
+    const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
 
-  // Calculate the turning motor output from the turning PID controller.
-  auto turnOutput = m_turningPIDController.Calculate(radian_t(m_turningEncoder.Get()), state.angle.Radians());
+    // Calculate the turning motor output from the turning PID controller.
+    auto turnOutput = m_turningPIDController.Calculate(radian_t(m_turningEncoder.Get()), state.angle.Radians());
 
-  // Set the motor outputs.
-  m_driveMotor.Set(driveOutput);
-  m_turningMotor.Set(turnOutput);
+    // Set the motor outputs.
+    m_driveMotor.Set(driveOutput);
+    m_turningMotor.Set(turnOutput);
 }
 
 void SwerveModule::ResetEncoders()
 {
-  m_driveEncoder.SetPosition(0.0);
-  //m_turningEncoder.SetPosition(0.0);
+    m_driveEncoder.SetPosition(0.0);
+    //m_turningEncoder.SetPosition(0.0);
 }

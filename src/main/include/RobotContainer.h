@@ -27,23 +27,24 @@
  * scheduler calls).  Instead, the structure of the robot (including subsystems,
  * commands, and button mappings) should be declared here.
  */
-class RobotContainer {
- public:
-  RobotContainer();
+class RobotContainer
+{
+public:
+    RobotContainer();
 
-  frc2::Command* GetAutonomousCommand();
+    frc2::Command *GetAutonomousCommand();
 
- private:
-  // The driver's controller
-  frc::XboxController m_driverController{OIConstants::kDriverControllerPort};
+private:
+    // The driver's controller
+    frc::XboxController m_driverController{OIConstants::kDriverControllerPort};
 
-  // The robot's subsystems and commands are defined here...
+    // The robot's subsystems and commands are defined here...
 
-  // The robot's subsystems
-  DriveSubsystem m_drive;
+    // The robot's subsystems
+    DriveSubsystem m_drive;
 
-  // The chooser for the autonomous routines
-  frc::SendableChooser<frc2::Command*> m_chooser;
+    // The chooser for the autonomous routines
+    frc::SendableChooser<frc2::Command *> m_chooser;
 
-  void ConfigureButtonBindings();
+    void ConfigureButtonBindings();
 };
