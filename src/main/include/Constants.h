@@ -63,9 +63,9 @@ namespace DriveConstants
     // theoretically for *your* robot's drive. The RobotPy Characterization
     // Toolsuite provides a convenient tool for obtaining these values for your
     // robot.
-    constexpr auto ks = 1_V;
-    constexpr auto kv = 0.8 * 1_V * 1_s / 1_m;
-    constexpr auto ka = 0.15 * 1_V * 1_s * 1_s / 1_m;
+    //constexpr auto ks = 1_V;
+    //constexpr auto kv = 0.8 * 1_V * 1_s / 1_m;
+    //constexpr auto ka = 0.15 * 1_V * 1_s * 1_s / 1_m;
 
     // Example value only - as above, this must be tuned for your drive!
     constexpr double kPFrontLeftVel = 0.5;
@@ -78,16 +78,16 @@ namespace DriveConstants
 namespace ModuleConstants
 {
     constexpr int kEncoderCPR = 1024;
-    constexpr double kWheelDiameterMeters = .15;    // 6"
+    constexpr double kWheelDiameterMeters = .1016;    // 4"
     // Assumes the encoders are directly mounted on the wheel shafts
     constexpr double kDriveEncoderDistancePerPulse = (kWheelDiameterMeters * wpi::math::pi) / static_cast<double>(kEncoderCPR);
 
     // Assumes the encoders are directly mounted on the wheel shafts
-    constexpr double kTurningEncoderDistancePerPulse = (wpi::math::pi * 2) / static_cast<double>(kEncoderCPR);
+    //constexpr double kTurningEncoderDistancePerPulse = (wpi::math::pi * 2) / static_cast<double>(kEncoderCPR);
 
-    constexpr double kPModuleTurningController = 1;
+    constexpr double kPModuleTurningController = 0.01;
     constexpr double kPModuleDriveController = 1;
-}  // namespace ModuleConstants
+}   // namespace ModuleConstants
 
 namespace AutoConstants
 {

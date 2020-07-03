@@ -42,8 +42,8 @@ private:
     // ProfiledPIDController's constraints only take in meters per second and
     // meters per second squared.
 
-    static constexpr radians_per_second_t kModuleMaxAngularVelocity = radians_per_second_t(wpi::math::pi);                                           // radians per second
-    static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0); // radians per second squared
+    static constexpr radians_per_second_t kModuleMaxAngularVelocity = 0.1 * radians_per_second_t(wpi::math::pi);                                           // radians per second
+    static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = 0.1 * unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0); // radians per second squared
 
     CANSparkMax m_driveMotor;
     CANSparkMax m_turningMotor;
