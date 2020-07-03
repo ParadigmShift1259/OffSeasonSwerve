@@ -14,6 +14,7 @@
 #include <frc/kinematics/SwerveModuleState.h>
 #include <frc/trajectory/TrapezoidProfile.h>
 #include <wpi/math>
+#include <string>
 
 #include <rev\CANSparkMax.h>
 #include <rev\CANEncoder.h>
@@ -27,7 +28,14 @@ class SwerveModule
     using radians_per_second_squared_t = compound_unit<radians, inverse<squared<second>>>;
 
 public:
-    SwerveModule(int driveMotorChannel, int turningMotorChannel, const int driveEncoderPorts[2], const int turningEncoderPorts[2], bool driveEncoderReversed, bool turningEncoderReversed, double offSet);
+    SwerveModule(int driveMotorChannel
+    , int turningMotorChannel
+    , const int driveEncoderPorts[2]
+    , const int turningEncoderPorts[2]
+    , bool driveEncoderReversed
+    , bool turningEncoderReversed
+    , double offSet
+    , std::string name);
 
     frc::SwerveModuleState GetState();
 
@@ -42,8 +50,8 @@ private:
     // ProfiledPIDController's constraints only take in meters per second and
     // meters per second squared.
 
-    static constexpr radians_per_second_t kModuleMaxAngularVelocity = 0.1 * radians_per_second_t(wpi::math::pi);                                           // radians per second
-    static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = 0.1 * unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0); // radians per second squared
+    static constexpr radians_per_second_t kModuleMaxAngularVelocity = radians_per_second_t(wpi::math::pi);                                           // radians per second
+    static constexpr unit_t<radians_per_second_squared_t> kModuleMaxAngularAcceleration = unit_t<radians_per_second_squared_t>(wpi::math::pi * 2.0); // radians per second squared
 
     CANSparkMax m_driveMotor;
     CANSparkMax m_turningMotor;
@@ -56,11 +64,16 @@ private:
 
     frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
 
+    static constexpr units::second_t kDt = 20_ms;
+    
     frc::ProfiledPIDController<radians> m_turningPIDController{
-        ModuleConstants::kPModuleTurningController,
-        0.0,
-        0.0,
-        {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}};
+        ModuleConstants::kP_ModuleTurningController
+        , 0.0
+        , 0.0
+        , {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}
+        //, kDt
+        };
 
     double m_offSet;
+    std::string m_name;
 };

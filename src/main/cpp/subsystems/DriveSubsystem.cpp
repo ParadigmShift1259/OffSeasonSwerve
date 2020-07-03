@@ -26,7 +26,8 @@ DriveSubsystem::DriveSubsystem()
         kFrontLeftTurningEncoderPorts,
         kFrontLeftDriveEncoderReversed,
         kFrontLeftTurningEncoderReversed,
-        3.11
+        3.11,
+        std::string("FrontLeft")
         },
 
       m_frontRight{
@@ -36,7 +37,8 @@ DriveSubsystem::DriveSubsystem()
         kFrontRightTurningEncoderPorts,
         kFrontRightDriveEncoderReversed,
         kFrontRightTurningEncoderReversed,
-        5.07
+        5.07,
+        std::string("FrontRight")
         },
 
       m_rearRight{
@@ -46,7 +48,8 @@ DriveSubsystem::DriveSubsystem()
         kRearRightTurningEncoderPorts,
         kRearRightDriveEncoderReversed,
         kRearRightTurningEncoderReversed,
-        0.50
+        0.50,
+        std::string("RearRight")
         },
 
       m_rearLeft{
@@ -56,31 +59,48 @@ DriveSubsystem::DriveSubsystem()
         kRearLeftTurningEncoderPorts,
         kRearLeftDriveEncoderReversed,
         kRearLeftTurningEncoderReversed,
-        4.92
+        4.92,
+        std::string("RearLeft")
         },
 
       m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
       //,m_gyro(0)
 {
-   /*
-    SmartDashboard::PutNumber("FrontRight", 0.0);
+    SmartDashboard::PutBoolean("GetInputFromNetTable", true);
+
     SmartDashboard::PutNumber("FrontLeft", 0.0);
+    SmartDashboard::PutNumber("FrontRight", 0.0);
     SmartDashboard::PutNumber("RearRight", 0.0);
     SmartDashboard::PutNumber("RearLeft", 0.0);
-    */
-}
+    
+    SmartDashboard::PutNumber("FrontLeftV", 0.0);
+    SmartDashboard::PutNumber("FrontRightV", 0.0);
+    SmartDashboard::PutNumber("RearLeftV", 0.0);
+    SmartDashboard::PutNumber("RearRightV", 0.0);
 
+    SmartDashboard::PutNumber("kP", ModuleConstants::kP_ModuleTurningController);
+    SmartDashboard::PutNumber("kd", ModuleConstants::kD_ModuleTurningController);
+    SmartDashboard::PutNumber("kI", 0.000);
+
+    SmartDashboard::PutNumber("kP drive", ModuleConstants::kPModuleDriveController);
+}
 
 void DriveSubsystem::Periodic()
 {
     // Implementation of subsystem periodic method goes here.
-    m_odometry.Update(GetHeadingAsRot2d(), m_frontLeft.GetState(), m_rearLeft.GetState() // TODO check order FL, RL?
-                      ,
-                      m_frontRight.GetState(), m_rearRight.GetState());
+    m_odometry.Update(GetHeadingAsRot2d()
+                    , m_frontLeft.GetState()
+                    , m_rearLeft.GetState() // TODO check order FL, RL?
+                    , m_frontRight.GetState()
+                    , m_rearRight.GetState());
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
 {
+    SmartDashboard::PutNumber("x speed", xSpeed.to<double>());
+    SmartDashboard::PutNumber("y speed", ySpeed.to<double>());
+    SmartDashboard::PutNumber("rotation", rot.to<double>());
+
     frc::ChassisSpeeds chassisSpeeds;
     if (fieldRelative)
         chassisSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xSpeed, ySpeed, rot, GetHeadingAsRot2d());
@@ -91,25 +111,39 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
 
     kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
     
-    double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
-    states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
+    if (SmartDashboard::GetBoolean("GetInputFromNetTable", false))
+    {
+        double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
+        states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
 
-    angle = SmartDashboard::GetNumber("FrontRight", 0.0);
-    states[eFrontRight].angle = frc::Rotation2d(radian_t(angle));
+        angle = SmartDashboard::GetNumber("FrontRight", 0.0);
+        states[eFrontRight].angle = frc::Rotation2d(radian_t(angle));
 
-    angle = SmartDashboard::GetNumber("RearLeft", 0.0);
-    states[eRearLeft].angle = frc::Rotation2d(radian_t(angle));
+        angle = SmartDashboard::GetNumber("RearLeft", 0.0);
+        states[eRearLeft].angle = frc::Rotation2d(radian_t(angle));
 
-    angle = SmartDashboard::GetNumber("RearRight", 0.0);
-    states[eRearRight].angle = frc::Rotation2d(radian_t(angle));
+        angle = SmartDashboard::GetNumber("RearRight", 0.0);
+        states[eRearRight].angle = frc::Rotation2d(radian_t(angle));
 
+        double speed = SmartDashboard::GetNumber("FrontLeftV", 0.0);
+        states[eFrontLeft].speed = meters_per_second_t(speed);
 
-    cout<<"Drive() ";
-    cout<<" FrontLeft Angle: "<< states[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)states[eFrontLeft].speed;
-    cout<<" FrontRight Angle: "<< states[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)states[eFrontRight].speed;
-    cout<<" RearRight Angle: "<< states[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)states[eRearRight].speed;
-    cout<<" RearLeft Angle: "<< states[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)states[eRearLeft].speed;
-    cout<<"\n";
+        speed = SmartDashboard::GetNumber("FrontRightV", 0.0);
+        states[eFrontLeft].speed = meters_per_second_t(speed);
+
+        speed = SmartDashboard::GetNumber("RearLeftV", 0.0);
+        states[eFrontLeft].speed = meters_per_second_t(speed);
+
+        speed = SmartDashboard::GetNumber("RearRightV", 0.0);
+        states[eFrontLeft].speed = meters_per_second_t(speed);
+    }
+
+    // cout<<"Drive() ";
+    // cout<<" FrontLeft Angle: "<< states[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)states[eFrontLeft].speed;
+    // cout<<" FrontRight Angle: "<< states[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)states[eFrontRight].speed;
+    // cout<<" RearRight Angle: "<< states[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)states[eRearRight].speed;
+    // cout<<" RearLeft Angle: "<< states[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)states[eRearLeft].speed;
+    // cout<<"\n";
     m_frontLeft.SetDesiredState(states[eFrontLeft]);
     m_frontRight.SetDesiredState(states[eFrontRight]);
     m_rearLeft.SetDesiredState(states[eRearLeft]);
@@ -125,10 +159,10 @@ void DriveSubsystem::SetModuleStates(SwerveModuleStates desiredStates)
     cout<<" RearRight Angle: "<< desiredStates[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)desiredStates[eRearRight].speed;
     cout<<" RearLeft Angle: "<< desiredStates[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)desiredStates[eRearLeft].speed;
     cout<<"\n";
-    //m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
+    m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
     m_frontRight.SetDesiredState(desiredStates[eFrontRight]);
-    //m_rearRight.SetDesiredState(desiredStates[eRearRight]);
-    //m_rearLeft.SetDesiredState(desiredStates[eRearLeft]);
+    m_rearRight.SetDesiredState(desiredStates[eRearRight]);
+    m_rearLeft.SetDesiredState(desiredStates[eRearLeft]);
 }
 
 void DriveSubsystem::ResetEncoders()

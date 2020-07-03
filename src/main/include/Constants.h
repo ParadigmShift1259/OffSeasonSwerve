@@ -68,10 +68,11 @@ namespace DriveConstants
     //constexpr auto ka = 0.15 * 1_V * 1_s * 1_s / 1_m;
 
     // Example value only - as above, this must be tuned for your drive!
-    constexpr double kPFrontLeftVel = 0.5;
-    constexpr double kPRearLeftVel = 0.5;
-    constexpr double kPFrontRightVel = 0.5;
-    constexpr double kPRearRightVel = 0.5;
+    //constexpr double kPFrontLeftVel = 0.5;
+    //constexpr double kPRearLeftVel = 0.5;
+    //constexpr double kPFrontRightVel = 0.5;
+    //constexpr double kPRearRightVel = 0.5;
+
     constexpr double kTurnVoltageToRadians = 2.0 * wpi::math::pi / 4.93;
 }  // namespace DriveConstants
 
@@ -85,18 +86,20 @@ namespace ModuleConstants
     // Assumes the encoders are directly mounted on the wheel shafts
     //constexpr double kTurningEncoderDistancePerPulse = (wpi::math::pi * 2) / static_cast<double>(kEncoderCPR);
 
-    constexpr double kPModuleTurningController = 0.01;
-    constexpr double kPModuleDriveController = 1;
+    constexpr double kP_ModuleTurningController = 1.1;
+    constexpr double kD_ModuleTurningController = 0.03;
+
+    constexpr double kPModuleDriveController = 0.001;
 }   // namespace ModuleConstants
 
 namespace AutoConstants
 {
     using radians_per_second_squared_t = units::compound_unit<units::radians, units::inverse<units::squared<units::second>>>;
 
-    constexpr auto kMaxSpeed = 0.1 * units::meters_per_second_t(3);
-    constexpr auto kMaxAcceleration = 0.1 *  units::meters_per_second_squared_t(3);
-    constexpr auto kMaxAngularSpeed = 0.1 *  units::radians_per_second_t(3.142);
-    constexpr auto kMaxAngularAcceleration = 0.1 *  units::unit_t<radians_per_second_squared_t>(3.142);
+    constexpr auto kMaxSpeed = units::meters_per_second_t(1.0);
+    constexpr auto kMaxAcceleration = units::meters_per_second_squared_t(3.0);
+    constexpr auto kMaxAngularSpeed = units::radians_per_second_t(wpi::math::pi);
+    constexpr auto kMaxAngularAcceleration = units::unit_t<radians_per_second_squared_t>(wpi::math::pi);
 
     constexpr double kPXController = 0.5;
     constexpr double kPYController = 0.5;
@@ -107,5 +110,5 @@ namespace AutoConstants
 
 namespace OIConstants
 {
-    constexpr int kDriverControllerPort = 1;
+    constexpr int kDriverControllerPort = 0;
 }  // namespace OIConstants

@@ -33,11 +33,7 @@ public:
     {
         eFrontLeft,
         eFrontRight,
-<<<<<<< HEAD
-        eRearLeft,    
-=======
         eRearLeft,
->>>>>>> 2a70c3fc52d3c2f1b51fc1aba7169fe0365b2b3a
         eRearRight
     };
     DriveSubsystem();
