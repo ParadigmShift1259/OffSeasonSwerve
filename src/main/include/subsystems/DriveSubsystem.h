@@ -18,11 +18,13 @@
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc/kinematics/SwerveDriveOdometry.h>
 #include <frc2/command/SubsystemBase.h>
+#include <ctre/phoenix.h>
 
 #include <ctre/phoenix.h>
 
 #include "Constants.h"
 #include "SwerveModule.h"
+
 
 class DriveSubsystem : public frc2::SubsystemBase
 {
@@ -31,7 +33,11 @@ public:
     {
         eFrontLeft,
         eFrontRight,
+<<<<<<< HEAD
         eRearLeft,    
+=======
+        eRearLeft,
+>>>>>>> 2a70c3fc52d3c2f1b51fc1aba7169fe0365b2b3a
         eRearRight
     };
     DriveSubsystem();
