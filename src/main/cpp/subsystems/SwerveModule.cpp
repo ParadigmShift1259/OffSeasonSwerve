@@ -53,10 +53,24 @@ frc::SwerveModuleState SwerveModule::GetState()
 
 void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 {
-    m_turningPIDController.SetP(frc::SmartDashboard::GetNumber("kP", ModuleConstants::kP_ModuleTurningController));
-    m_turningPIDController.SetD(frc::SmartDashboard::GetNumber("kd", ModuleConstants::kD_ModuleTurningController));
+    double p = frc::SmartDashboard::GetNumber("kP", ModuleConstants::kP_ModuleTurningController);
+    if (p !=  m_turningPIDController.GetP())
+    {
+        m_turningPIDController.SetP(p);
+    }
+    
+    double d = frc::SmartDashboard::GetNumber("kd", ModuleConstants::kD_ModuleTurningController);
+    if (d !=  m_turningPIDController.GetD())
+    {
+        m_turningPIDController.SetD(d);
+    }
+
     //m_turningPIDController.SetI(frc::SmartDashboard::GetNumber("kI", 0.000));
-    m_drivePIDController.SetP(frc::SmartDashboard::GetNumber("kP drive", ModuleConstants::kPModuleDriveController));
+    double pDrive = frc::SmartDashboard::GetNumber("kP drive", ModuleConstants::kPModuleDriveController);
+    if (p !=  m_drivePIDController.GetP())
+    {
+        m_drivePIDController.SetP(pDrive);
+    }
 
     // Calculate the drive output from the drive PID controller.
     const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
