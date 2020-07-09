@@ -55,6 +55,10 @@ private:
 
     CANSparkMax m_driveMotor;
     CANSparkMax m_turningMotor;
+    CANPIDController m_turnPIDController = m_turningMotor.GetPIDController();
+    CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
+
+    double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0, kMaxOutput = 1, kMinOutput = -1;
 
     CANEncoder m_driveEncoder;
     frc::AnalogInput m_turningEncoder;
@@ -66,14 +70,6 @@ private:
 
     static constexpr units::second_t kDt = 20_ms;
     
-    frc::ProfiledPIDController<radians> m_turningPIDController{
-        ModuleConstants::kP_ModuleTurningController
-        , 0.0
-        , 0.0
-        , {kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration}
-        //, kDt
-        };
-
     double m_offSet;
     std::string m_name;
 };
