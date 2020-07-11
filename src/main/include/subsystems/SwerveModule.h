@@ -45,6 +45,18 @@ public:
 
 private:
     double VoltageToRadians(double Voltage, double OffSet);
+    double VoltageToDegrees(double Voltage, double OffSet);
+
+    // Convert any angle theta in radians to its equivalent on the interval [0, 2pi]
+    double ZeroTo2PiRads(double theta);
+
+    // Convert any angle theta in radians to its equivalent on the interval [-pi, pi]
+    double NegPiToPiRads(double theta);
+
+    // Determine the smallest magnitude delta angle that can be added to initial angle that will 
+    // result in an angle equivalent (but not necessarily equal) to final angle. 
+    // All angles in radians
+    double MinTurnRads(double init, double final);
 
     // We have to use meters here instead of radians due to the fact that
     // ProfiledPIDController's constraints only take in meters per second and
@@ -58,7 +70,13 @@ private:
     CANPIDController m_turnPIDController = m_turningMotor.GetPIDController();
     CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
 
-    double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0, kMaxOutput = 1, kMinOutput = -1;
+    double kP = 0.1;
+    double kI = 0.0;//1e-4;
+    double kD = 1;
+    double kIz = 0;
+    double kFF = 0;
+    double kMaxOutput = 1;
+    double kMinOutput = -1;
 
     CANEncoder m_driveEncoder;
     frc::AnalogInput m_turningEncoder;
@@ -72,4 +90,5 @@ private:
     
     double m_offSet;
     std::string m_name;
+    double m_lastAngle;
 };

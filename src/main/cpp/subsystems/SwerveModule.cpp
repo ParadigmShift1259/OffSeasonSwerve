@@ -31,9 +31,15 @@ SwerveModule::SwerveModule(int driveMotorChannel,
     , m_reverseTurningEncoder(turningEncoderReversed)
     , m_offSet(offSet)
     , m_name(name)
-    , m_turnNeoEncoder(m_turningMotor, CANEncoder::EncoderType::kHallSensor, 120)
+    , m_turnNeoEncoder(m_turningMotor)
 {
     m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / 60.0); // GetVelocity() will return meters per sec instead of RPM
+    m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / 18.0); // 18 motor revolutions per wheel revolution
+    
+    double initPosition = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
+    m_lastAngle = initPosition;
+    m_turnNeoEncoder.SetPosition(initPosition); // Tell the encoder where the absolute encoder is
+    
     //m_driveEncoder.SetVelocityConversionFactor(1.0); // GetVelocity() will return meters per sec instead of RPM
 
     //m_driveMotor.SetInverted(true);
@@ -88,22 +94,42 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     // Calculate the drive output from the drive PID controller.
     const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
 
+    double currentPosition = m_turnNeoEncoder.GetPosition();
+//#define USE_ABS_ENC
+#ifdef USE_ABS_ENC
     // Calculate the turning motor output from the turning PID controller.
-    double angle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
-    m_turnPIDController.SetReference(rotations, rev::ControlType::kPosition);
-    
-    frc::SmartDashboard::PutNumber("SetPoint", rotations);
-    frc::SmartDashboard::PutNumber("ProcessVariable", m_turnNeoEncoder.GetPosition());
+    double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
+    dbvalname = m_name + " meas angle";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), absAngle);
+    double minTurnRads = MinTurnRads(absAngle, state.angle.Radians().to<double>());
+#else
+    double minTurnRads = MinTurnRads(currentPosition, state.angle.Radians().to<double>());
+#endif
+    double newPosition = currentPosition + minTurnRads;
+    m_turnPIDController.SetReference(newPosition, rev::ControlType::kPosition);
+
+    std::string dbvalname;
+    dbvalname = m_name + " minTurnRads";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), minTurnRads);
+    dbvalname = m_name + " currentPosition";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), currentPosition);
+    dbvalname = m_name + " newPosition";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), newPosition);
+    // m_turnPIDController.SetReference(rotations, rev::ControlType::kPosition);
+
+    dbvalname = m_name + " SetPoint";
+    // frc::SmartDashboard::PutNumber(dbvalname.c_str(), rotations);
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), newPosition);
+    dbvalname = m_name + " ProcessVariable";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_turnNeoEncoder.GetPosition());
+
     //auto turnOutput = m_turningPIDController.Calculate(radian_t(angle), state.angle.Radians());
 
     //std::cout<< " TurnOutput " << turnOutput << " angle " << angle << " state.angle.Radians() " << state.angle.Radians() << "\n";
 
-    std::string dbvalname = m_name + " driveOutput";
+    dbvalname = m_name + " driveOutput";
     frc::SmartDashboard::PutNumber(dbvalname.c_str(), driveOutput);
 
-    dbvalname = m_name + " meas angle";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), angle);
-    
     // Set the motor outputs.
     m_driveMotor.Set(driveOutput);
     //m_driveMotor.Set(0);
@@ -122,10 +148,67 @@ double SwerveModule::VoltageToRadians(double Voltage, double OffSet)
 {
     double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - OffSet + 2 * wpi::math::pi, 2 * wpi::math::pi);
 
-    if (angle > wpi::math::pi)
-    {
-        angle -= 2 * wpi::math::pi;
-    }
+    double tolerance = frc::SmartDashboard::GetNumber("Tolerance", 0.1);
+
+    // if (fabs(m_lastAngle - angle) < tolerance)
+    // {
+    //     return m_lastAngle;
+    // }
+    // m_lastAngle = angle; 
+
+    // if (angle > wpi::math::pi)
+    // {
+    //     angle -= 2 * wpi::math::pi;
+    // }
 
     return angle;
 }
+
+double SwerveModule::VoltageToDegrees(double Voltage, double OffSet)
+{
+    double angle = fmod(Voltage * DriveConstants::KTurnVoltageToDegrees - OffSet + 360.0, 360.0);
+
+    //if (angle > 180.0)
+    // {
+    //     angle -= 360.0;
+    // }
+
+    return angle;
+}
+
+// Convert any angle theta in radians to its equivalent on the interval [0, 2pi]
+double SwerveModule::ZeroTo2PiRads(double theta)
+    {
+    theta = fmod(theta, 2*M_PI);
+    if (theta < 0)
+        theta += 2*M_PI;
+        
+    return theta;
+    }
+
+// Convert any angle theta in radians to its equivalent on the interval [-pi, pi]
+double SwerveModule::NegPiToPiRads(double theta)
+    {
+    theta = ZeroTo2PiRads(theta);
+    if (theta > M_PI)
+        theta -= 2*M_PI;
+        
+    return theta;
+    }
+
+// Determine the smallest magnitude delta angle that can be added to initial angle that will 
+// result in an angle equivalent (but not necessarily equal) to final angle. 
+// All angles in radians
+double SwerveModule::MinTurnRads(double init, double final)
+    {
+    init = ZeroTo2PiRads(init);
+    final = ZeroTo2PiRads(final);
+
+    double turn = final-init;
+    if (turn > M_PI)
+        turn -= 2* M_PI;
+    else if (turn < -M_PI)
+        turn += 2* M_PI;
+        
+    return turn;
+    }

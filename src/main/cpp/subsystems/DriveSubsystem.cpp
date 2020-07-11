@@ -83,6 +83,8 @@ DriveSubsystem::DriveSubsystem()
     SmartDashboard::PutNumber("kI", 0.000);
 
     SmartDashboard::PutNumber("kP drive", ModuleConstants::kPModuleDriveController);
+
+    SmartDashboard::PutNumber("Tolerance", 0.1);
 }
 
 void DriveSubsystem::Periodic()
@@ -111,7 +113,7 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
 
     kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
     
-    if (SmartDashboard::GetBoolean("GetInputFromNetTable", false))
+    if (SmartDashboard::GetBoolean("GetInputFromNetTable", true))
     {
         double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
         states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
