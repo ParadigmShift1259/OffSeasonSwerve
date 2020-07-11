@@ -37,7 +37,7 @@ SwerveModule::SwerveModule(int driveMotorChannel,
     m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / 18.0); // 18 motor revolutions per wheel revolution
     
     double initPosition = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
-    m_lastAngle = initPosition;
+    //m_lastAngle = initPosition;
     m_turnNeoEncoder.SetPosition(initPosition); // Tell the encoder where the absolute encoder is
     
     //m_driveEncoder.SetVelocityConversionFactor(1.0); // GetVelocity() will return meters per sec instead of RPM
@@ -81,14 +81,15 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     double rotations = frc::SmartDashboard::GetNumber("Set Rotations", 0);
 
     // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if((p != kP)) { m_turnPIDController.SetP(p); kP = p; }
-    if((i != kI)) { m_turnPIDController.SetI(i); kI = i; }
-    if((d != kD)) { m_turnPIDController.SetD(d); kD = d; }
-    if((iz != kIz)) { m_turnPIDController.SetIZone(iz); kIz = iz; }
-    if((ff != kFF)) { m_turnPIDController.SetFF(ff); kFF = ff; }
-    if((max != kMaxOutput) || (min != kMinOutput)) { 
-      m_turnPIDController.SetOutputRange(min, max); 
-      kMinOutput = min; kMaxOutput = max; 
+    if ((p != kP)) { m_turnPIDController.SetP(p); kP = p; }
+    if ((i != kI)) { m_turnPIDController.SetI(i); kI = i; }
+    if ((d != kD)) { m_turnPIDController.SetD(d); kD = d; }
+    if ((iz != kIz)) { m_turnPIDController.SetIZone(iz); kIz = iz; }
+    if ((ff != kFF)) { m_turnPIDController.SetFF(ff); kFF = ff; }
+    if ((max != kMaxOutput) || (min != kMinOutput))
+    { 
+        m_turnPIDController.SetOutputRange(min, max);
+        kMinOutput = min; kMaxOutput = max; 
     }
 
     // Calculate the drive output from the drive PID controller.
@@ -148,8 +149,9 @@ double SwerveModule::VoltageToRadians(double Voltage, double OffSet)
 {
     double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - OffSet + 2 * wpi::math::pi, 2 * wpi::math::pi);
 
-    double tolerance = frc::SmartDashboard::GetNumber("Tolerance", 0.1);
+    //double tolerance = frc::SmartDashboard::GetNumber("Tolerance", 0.1);
 
+    // Deadband the measured angle
     // if (fabs(m_lastAngle - angle) < tolerance)
     // {
     //     return m_lastAngle;
@@ -164,9 +166,9 @@ double SwerveModule::VoltageToRadians(double Voltage, double OffSet)
     return angle;
 }
 
-double SwerveModule::VoltageToDegrees(double Voltage, double OffSet)
+double SwerveModule::VoltageToDegrees(double voltage, double offSet)
 {
-    double angle = fmod(Voltage * DriveConstants::KTurnVoltageToDegrees - OffSet + 360.0, 360.0);
+    double angle = fmod(voltage * DriveConstants::KTurnVoltageToDegrees - offSet + 360.0, 360.0);
 
     //if (angle > 180.0)
     // {
@@ -179,36 +181,36 @@ double SwerveModule::VoltageToDegrees(double Voltage, double OffSet)
 // Convert any angle theta in radians to its equivalent on the interval [0, 2pi]
 double SwerveModule::ZeroTo2PiRads(double theta)
     {
-    theta = fmod(theta, 2*M_PI);
+    theta = fmod(theta, 2 * M_PI);
     if (theta < 0)
-        theta += 2*M_PI;
+        theta += 2 * M_PI;
         
     return theta;
     }
 
 // Convert any angle theta in radians to its equivalent on the interval [-pi, pi]
 double SwerveModule::NegPiToPiRads(double theta)
-    {
+{
     theta = ZeroTo2PiRads(theta);
     if (theta > M_PI)
-        theta -= 2*M_PI;
+        theta -= 2 * M_PI;
         
     return theta;
-    }
+}
 
 // Determine the smallest magnitude delta angle that can be added to initial angle that will 
 // result in an angle equivalent (but not necessarily equal) to final angle. 
 // All angles in radians
 double SwerveModule::MinTurnRads(double init, double final)
-    {
+{
     init = ZeroTo2PiRads(init);
     final = ZeroTo2PiRads(final);
 
-    double turn = final-init;
+    double turn = final - init;
     if (turn > M_PI)
-        turn -= 2* M_PI;
+        turn -= 2 * M_PI;
     else if (turn < -M_PI)
-        turn += 2* M_PI;
+        turn += 2 * M_PI;
         
     return turn;
-    }
+}
