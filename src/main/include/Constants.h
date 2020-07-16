@@ -73,6 +73,11 @@ namespace DriveConstants
     //constexpr double kPFrontRightVel = 0.5;
     //constexpr double kPRearRightVel = 0.5;
 
+    constexpr double kFrontLeftOffset = 3.14;
+    constexpr double kFrontRightOffset = 5.07; //5.66;
+    constexpr double kRearLeftOffset = 3.34;//4.29;
+    constexpr double kRearRightOffset = 0.63;//5.29;
+
     constexpr double kTurnVoltageToRadians = 2.0 * wpi::math::pi / 4.93;
     constexpr double KTurnVoltageToDegrees = 360 / 4.93;
 }  // namespace DriveConstants
@@ -91,6 +96,8 @@ namespace ModuleConstants
     constexpr double kD_ModuleTurningController = 0.03;
 
     constexpr double kPModuleDriveController = 0.001;
+
+    constexpr uint kMotorCurrentLimit = 30;
 }   // namespace ModuleConstants
 
 namespace AutoConstants

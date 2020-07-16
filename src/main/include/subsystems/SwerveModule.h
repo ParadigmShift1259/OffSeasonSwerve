@@ -86,9 +86,6 @@ private:
 
     frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
 
-    //static constexpr units::second_t kDt = 20_ms;
-    
     double m_offSet;
     std::string m_name;
-    //double m_lastAngle;
 };

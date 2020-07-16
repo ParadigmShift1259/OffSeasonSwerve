@@ -26,7 +26,7 @@ DriveSubsystem::DriveSubsystem()
         kFrontLeftTurningEncoderPorts,
         kFrontLeftDriveEncoderReversed,
         kFrontLeftTurningEncoderReversed,
-        3.11,
+        kFrontLeftOffset,
         std::string("FrontLeft")
         },
 
@@ -37,7 +37,7 @@ DriveSubsystem::DriveSubsystem()
         kFrontRightTurningEncoderPorts,
         kFrontRightDriveEncoderReversed,
         kFrontRightTurningEncoderReversed,
-        5.07,
+        kFrontRightOffset,
         std::string("FrontRight")
         },
 
@@ -48,7 +48,7 @@ DriveSubsystem::DriveSubsystem()
         kRearRightTurningEncoderPorts,
         kRearRightDriveEncoderReversed,
         kRearRightTurningEncoderReversed,
-        0.50,
+        kRearRightOffset,
         std::string("RearRight")
         },
 
@@ -59,7 +59,7 @@ DriveSubsystem::DriveSubsystem()
         kRearLeftTurningEncoderPorts,
         kRearLeftDriveEncoderReversed,
         kRearLeftTurningEncoderReversed,
-        4.92,
+        kRearLeftOffset,
         std::string("RearLeft")
         },
 
