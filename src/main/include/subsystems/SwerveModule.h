@@ -67,24 +67,32 @@ private:
 
     CANSparkMax m_driveMotor;
     CANSparkMax m_turningMotor;
-    CANPIDController m_turnPIDController = m_turningMotor.GetPIDController();
-    CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
 
-    double kP = 0.1;
-    double kI = 0.0;//1e-4;
-    double kD = 1;
-    double kIz = 0;
-    double kFF = 0;
-    double kMaxOutput = 1;
-    double kMinOutput = -1;
+    CANPIDController m_drivePIDController = m_driveMotor.GetPIDController();
+    CANPIDController m_turnPIDController = m_turningMotor.GetPIDController();
+
+    double kdP = 0.1;
+    double kdD = 1;
+    double kdFF = 0;
+    double kdMaxOutput = 1;
+    double kdMinOutput = -1;
+
+    double ktP = 0.1;
+    double ktI = 0.0;//1e-4;
+    double ktD = 1;
+    double ktIz = 0;
+    double ktFF = 0;
+    double ktMaxOutput = 1;
+    double ktMinOutput = -1;
 
     CANEncoder m_driveEncoder;
+    CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
     frc::AnalogInput m_turningEncoder;
 
     bool m_reverseDriveEncoder;
     bool m_reverseTurningEncoder;
 
-    frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
+    //frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
 
     double m_offSet;
     std::string m_name;

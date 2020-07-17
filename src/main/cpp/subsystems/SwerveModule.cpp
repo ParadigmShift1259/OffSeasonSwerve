@@ -46,24 +46,35 @@ SwerveModule::SwerveModule(int driveMotorChannel,
     //m_driveMotor.SetInverted(true);
     m_turningMotor.SetInverted(false);
 
-    m_turnPIDController.SetP(kP);
-    m_turnPIDController.SetI(kI);
-    m_turnPIDController.SetD(kD);
-    m_turnPIDController.SetIZone(kIz);
-    m_turnPIDController.SetFF(kFF);
-    m_turnPIDController.SetOutputRange(kMinOutput, kMaxOutput);
+    m_turnPIDController.SetP(ktP);
+    m_turnPIDController.SetI(ktI);
+    m_turnPIDController.SetD(ktD);
+    m_turnPIDController.SetIZone(ktIz);
+    m_turnPIDController.SetFF(ktFF);
+    m_turnPIDController.SetOutputRange(ktMinOutput, ktMaxOutput);
+
+    m_drivePIDController.SetP(kdP);
+    m_drivePIDController.SetD(kdD);
+    m_drivePIDController.SetFF(kdFF);
+    m_drivePIDController.SetOutputRange(kdMinOutput, kdMaxOutput);
 
     double initPosition = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
     m_turnNeoEncoder.SetPosition(initPosition); // Tell the encoder where the absolute encoder is
 
-    frc::SmartDashboard::PutNumber("P Gain", kP);
-    frc::SmartDashboard::PutNumber("I Gain", kI);
-    frc::SmartDashboard::PutNumber("D Gain", kD);
-    frc::SmartDashboard::PutNumber("I Zone", kIz);
-    frc::SmartDashboard::PutNumber("Feed Forward", kFF);
-    frc::SmartDashboard::PutNumber("Max Output", kMaxOutput);
-    frc::SmartDashboard::PutNumber("Min Output", kMinOutput);
+    frc::SmartDashboard::PutNumber("Turn P Gain", ktP);
+    frc::SmartDashboard::PutNumber("Turn I Gain", ktI);
+    frc::SmartDashboard::PutNumber("Turn D Gain", ktD);
+    frc::SmartDashboard::PutNumber("Turn I Zone", ktIz);
+    frc::SmartDashboard::PutNumber("Turn Feed Forward", ktFF);
+    frc::SmartDashboard::PutNumber("Turn Max Output", ktMaxOutput);
+    frc::SmartDashboard::PutNumber("Turn Min Output", ktMinOutput);
     frc::SmartDashboard::PutNumber("Set Rotations", 0);
+
+    frc::SmartDashboard::PutNumber("Drive P Gain", kdP);
+    frc::SmartDashboard::PutNumber("Drive D Gain", kdD);
+    frc::SmartDashboard::PutNumber("Drive Feed Forward", kdFF);
+    frc::SmartDashboard::PutNumber("Drive Max Output", kdMaxOutput);
+    frc::SmartDashboard::PutNumber("Drive Min Output", kdMinOutput);
 }
 
 frc::SwerveModuleState SwerveModule::GetState()
@@ -75,39 +86,54 @@ frc::SwerveModuleState SwerveModule::GetState()
 
 void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 {
-    double p = frc::SmartDashboard::GetNumber("P Gain", 0);
-    double i = frc::SmartDashboard::GetNumber("I Gain", 0);
-    double d = frc::SmartDashboard::GetNumber("D Gain", 0);
-    double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
-    double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
-    double max = frc::SmartDashboard::GetNumber("Max Output", 0);
-    double min = frc::SmartDashboard::GetNumber("Min Output", 0);
+    // Retrieving turn PID values from SmartDashboard
+    double tp = frc::SmartDashboard::GetNumber("Turn P Gain", 0);
+    double ti = frc::SmartDashboard::GetNumber("Turn I Gain", 0);
+    double td = frc::SmartDashboard::GetNumber("Turn D Gain", 0);
+    double tiz = frc::SmartDashboard::GetNumber("Turn I Zone", 0);
+    double tff = frc::SmartDashboard::GetNumber("Turn Feed Forward", 0);
+    double tmax = frc::SmartDashboard::GetNumber("Turn Max Output", 0);
+    double tmin = frc::SmartDashboard::GetNumber("Turn Min Output", 0);
     double rotations = frc::SmartDashboard::GetNumber("Set Rotations", 0);
 
     // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if ((p != kP)) { m_turnPIDController.SetP(p); kP = p; }
-    if ((i != kI)) { m_turnPIDController.SetI(i); kI = i; }
-    if ((d != kD)) { m_turnPIDController.SetD(d); kD = d; }
-    if ((iz != kIz)) { m_turnPIDController.SetIZone(iz); kIz = iz; }
-    if ((ff != kFF)) { m_turnPIDController.SetFF(ff); kFF = ff; }
-    if ((max != kMaxOutput) || (min != kMinOutput))
+    if ((tp != ktP)) { m_turnPIDController.SetP(tp); ktP = tp; }
+    if ((ti != ktI)) { m_turnPIDController.SetI(ti); ktI = ti; }
+    if ((td != ktD)) { m_turnPIDController.SetD(td); ktD = td; }
+    if ((tiz != ktIz)) { m_turnPIDController.SetIZone(tiz); ktIz = tiz; }
+    if ((tff != ktFF)) { m_turnPIDController.SetFF(tff); ktFF = tff; }
+    if ((tmax != ktMaxOutput) || (tmin != ktMinOutput))
     { 
-        m_turnPIDController.SetOutputRange(min, max);
-        kMinOutput = min; kMaxOutput = max; 
+        m_turnPIDController.SetOutputRange(tmin, tmax);
+        ktMinOutput = tmin; ktMaxOutput = tmax; 
     }
 
-    std::string dbvalname;
+    // Retrieving drive PID values from SmartDashboard
+    double dp = frc::SmartDashboard::GetNumber("Drive P Gain", 0);
+    double dd = frc::SmartDashboard::GetNumber("Drive D Gain", 0);
+    double dff = frc::SmartDashboard::GetNumber("Drive Feed Forward", 0);
+    double dmax = frc::SmartDashboard::GetNumber("Drive Max Output", 0);
+    double dmin = frc::SmartDashboard::GetNumber("Drive Min Output", 0);
 
-    // Calculate the drive output from the drive PID controller.
-    const auto driveOutput = m_drivePIDController.Calculate(m_driveEncoder.GetVelocity(), state.speed.to<double>());
+    // if PID coefficients on SmartDashboard have changed, write new values to controller
+    if ((dp != kdP)) { m_turnPIDController.SetP(dp); kdP = dp; }
+    if ((dd != kdD)) { m_turnPIDController.SetD(dd); kdD = dd; }
+    if ((dff != kdFF)) { m_turnPIDController.SetFF(dff); kdFF = dff; }
+    if ((dmax != kdMaxOutput) || (dmin != kdMinOutput))
+    { 
+        m_drivePIDController.SetOutputRange(dmin, dmax);
+        kdMinOutput = dmin; kdMaxOutput = dmax; 
+    }
 
+    // Set velocity reference of drivePIDController
+    m_drivePIDController.SetReference(state.speed.to<double>(), rev::ControlType::kVelocity);
+
+
+    // Find absolute encoder and NEO encoder positions
+    double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
     double currentPosition = m_turnNeoEncoder.GetPosition();
 
-    // Calculate the turning motor output from the turning PID controller.
-
-    double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
-    dbvalname = m_name + " meas angle";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), absAngle);
+    // Calculate new turn position given current Neo position, current absolute encoder position, and desired state position
 //#define USE_ABS_ENC
 #ifdef USE_ABS_ENC
     double minTurnRads = MinTurnRads(absAngle, state.angle.Radians().to<double>());
@@ -115,7 +141,13 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     double minTurnRads = MinTurnRads(currentPosition, state.angle.Radians().to<double>());
 #endif
     double newPosition = currentPosition + minTurnRads;
+    // Set position reference of turnPIDController
     m_turnPIDController.SetReference(newPosition, rev::ControlType::kPosition);
+
+    std::string dbvalname;
+
+    dbvalname = m_name + " meas angle";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), absAngle);
 
     dbvalname = m_name + " minTurnRads";
     frc::SmartDashboard::PutNumber(dbvalname.c_str(), minTurnRads);
@@ -130,10 +162,7 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_turnNeoEncoder.GetPosition());
 
     dbvalname = m_name + " driveOutput";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), driveOutput);
-
-    // Set the motor outputs.
-    m_driveMotor.Set(driveOutput);
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_driveMotor.GetAppliedOutput());
 }
 
 void SwerveModule::ResetEncoders()
