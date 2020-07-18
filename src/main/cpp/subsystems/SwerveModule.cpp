@@ -18,7 +18,7 @@ SwerveModule::SwerveModule(int driveMotorChannel,
                            int turningMotorChannel,
                            const int driveEncoderPorts[2],
                            const int turningEncoderPorts[2],
-                           bool driveEncoderReversed,
+                           bool driveMotorReversed,
                            bool turningEncoderReversed,
                            double offSet,
                            std::string name)
@@ -27,8 +27,8 @@ SwerveModule::SwerveModule(int driveMotorChannel,
     , m_turningMotor(turningMotorChannel, CANSparkMax::MotorType::kBrushless)
     , m_driveEncoder(m_driveMotor)
     , m_turningEncoder(turningEncoderPorts[0])
-    , m_reverseDriveEncoder(driveEncoderReversed)
-    , m_reverseTurningEncoder(turningEncoderReversed)
+    //, m_reverseDriveEncoder(driveMotorReversed)
+    //, m_reverseTurningEncoder(turningEncoderReversed)
     , m_offSet(offSet)
     , m_name(name)
     , m_turnNeoEncoder(m_turningMotor)
@@ -36,14 +36,14 @@ SwerveModule::SwerveModule(int driveMotorChannel,
     m_driveMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
     m_turningMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
 
-    m_driveMotor.SetOpenLoopRampRate(0.1);
-    m_turningMotor.SetOpenLoopRampRate(0.1);
+    //m_driveMotor.SetOpenLoopRampRate(0.1);
+    //m_turningMotor.SetOpenLoopRampRate(0.1);
 
-    m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / 60.0); // GetVelocity() will return meters per sec instead of RPM
+    m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / (8.31 * 60.0)); // GetVelocity() will return meters per sec instead of RPM
     m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / 18.0); // 18 motor revolutions per wheel revolution
     
     //m_driveEncoder.SetVelocityConversionFactor(1.0); // GetVelocity() will return meters per sec instead of RPM
-    //m_driveMotor.SetInverted(true);
+    m_driveMotor.SetInverted(driveMotorReversed);
     m_turningMotor.SetInverted(false);
 
     m_turnPIDController.SetP(ktP);
@@ -116,9 +116,9 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     double dmin = frc::SmartDashboard::GetNumber("Drive Min Output", 0);
 
     // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if ((dp != kdP)) { m_turnPIDController.SetP(dp); kdP = dp; }
-    if ((dd != kdD)) { m_turnPIDController.SetD(dd); kdD = dd; }
-    if ((dff != kdFF)) { m_turnPIDController.SetFF(dff); kdFF = dff; }
+    if ((dp != kdP)) { m_drivePIDController.SetP(dp); kdP = dp; }
+    if ((dd != kdD)) { m_drivePIDController.SetD(dd); kdD = dd; }
+    if ((dff != kdFF)) { m_drivePIDController.SetFF(dff); kdFF = dff; }
     if ((dmax != kdMaxOutput) || (dmin != kdMinOutput))
     { 
         m_drivePIDController.SetOutputRange(dmin, dmax);
@@ -127,7 +127,6 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 
     // Set velocity reference of drivePIDController
     m_drivePIDController.SetReference(state.speed.to<double>(), rev::ControlType::kVelocity);
-
 
     // Find absolute encoder and NEO encoder positions
     double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
@@ -163,6 +162,12 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 
     dbvalname = m_name + " driveOutput";
     frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_driveMotor.GetAppliedOutput());
+    
+    dbvalname = m_name + " driveMeasVelocity";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_driveEncoder.GetVelocity());
+
+    dbvalname = m_name + " driveSetPtVelocity";
+    frc::SmartDashboard::PutNumber(dbvalname.c_str(), state.speed.to<double>());
 }
 
 void SwerveModule::ResetEncoders()

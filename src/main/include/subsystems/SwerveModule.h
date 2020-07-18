@@ -71,26 +71,26 @@ private:
     CANPIDController m_drivePIDController = m_driveMotor.GetPIDController();
     CANPIDController m_turnPIDController = m_turningMotor.GetPIDController();
 
-    double kdP = 0.1;
-    double kdD = 1;
-    double kdFF = 0;
-    double kdMaxOutput = 1;
-    double kdMinOutput = -1;
+    double kdP = 0.2;
+    double kdD = 0.0;
+    double kdFF = 0.3;
+    double kdMaxOutput = 1.0;
+    double kdMinOutput = -1.0;
 
     double ktP = 0.1;
     double ktI = 0.0;//1e-4;
-    double ktD = 1;
-    double ktIz = 0;
-    double ktFF = 0;
-    double ktMaxOutput = 1;
-    double ktMinOutput = -1;
+    double ktD = 1.0;
+    double ktIz = 0.0;
+    double ktFF = 0.0;
+    double ktMaxOutput = 1.0;
+    double ktMinOutput = -1.0;
 
     CANEncoder m_driveEncoder;
     CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
     frc::AnalogInput m_turningEncoder;
 
-    bool m_reverseDriveEncoder;
-    bool m_reverseTurningEncoder;
+    //bool m_reverseDriveEncoder;
+    //bool m_reverseTurningEncoder;
 
     //frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
 
