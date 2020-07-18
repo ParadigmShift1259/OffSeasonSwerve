@@ -7,24 +7,18 @@
 
 #pragma once
 
-#include <frc/ADXRS450_Gyro.h>
 #include <frc/Encoder.h>
-#include <frc/PWMVictorSPX.h>
-#include <frc/drive/MecanumDrive.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
-#include <frc/interfaces/Gyro.h>
+//#include <frc/interfaces/Gyro.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc/kinematics/SwerveDriveOdometry.h>
 #include <frc2/command/SubsystemBase.h>
 #include <ctre/phoenix.h>
 
-#include <ctre/phoenix.h>
-
 #include "Constants.h"
 #include "SwerveModule.h"
-
 
 class DriveSubsystem : public frc2::SubsystemBase
 {
@@ -101,5 +95,5 @@ private:
     // Odometry class for tracking robot pose
     // 4 defines the number of modules
     frc::SwerveDriveOdometry<4> m_odometry;
-    //ctre::PigeonIMU m_gyro;
+    PigeonIMU m_gyro;
 };

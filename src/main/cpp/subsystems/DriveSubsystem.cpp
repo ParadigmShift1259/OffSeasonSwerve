@@ -64,7 +64,7 @@ DriveSubsystem::DriveSubsystem()
         },
 
       m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
-      //,m_gyro(0)
+      ,m_gyro(0)
 {
     SmartDashboard::PutBoolean("GetInputFromNetTable", true);
 
@@ -95,6 +95,11 @@ void DriveSubsystem::Periodic()
                     , m_rearLeft.GetState() // TODO check order FL, RL?
                     , m_frontRight.GetState()
                     , m_rearRight.GetState());
+   
+    auto pose = m_odometry.GetPose();
+    SmartDashboard::PutNumber("ODO Pose x", pose.Translation().X().to<double>());
+    SmartDashboard::PutNumber("ODO Pose y", pose.Translation().Y().to<double>());
+    SmartDashboard::PutNumber("ODO Heading", pose.Rotation().Degrees().to<double>());
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
@@ -113,7 +118,7 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
 
     kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
     
-    if (SmartDashboard::GetBoolean("GetInputFromNetTable", true))
+    if (SmartDashboard::GetBoolean("GetInputFromNetTable", false))
     {
         double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
         states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
@@ -177,12 +182,12 @@ void DriveSubsystem::ResetEncoders()
 
 double DriveSubsystem::GetHeading()
 {
-    return 0.0; //std::remainder(m_gyro.GetAngle(), 360) * (kGyroReversed ? -1. : 1.);
+    return std::remainder(m_gyro.GetFusedHeading(), 360.0) * (kGyroReversed ? -1. : 1.);
 }
 
 void DriveSubsystem::ZeroHeading()
 {
-    //m_gyro.Reset();
+    m_gyro.ClearStickyFaults();
 }
 
 double DriveSubsystem::GetTurnRate()
