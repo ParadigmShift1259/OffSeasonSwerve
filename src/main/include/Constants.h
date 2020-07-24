@@ -51,10 +51,10 @@ namespace DriveConstants
     constexpr int kFrontRightDriveEncoderPorts[2]{4, 5};
     constexpr int kRearRightDriveEncoderPorts[2]{6, 7};
 
-    constexpr bool kFrontLeftDriveMotorReversed = true;
-    constexpr bool kRearLeftDriveMotorReversed = true;
-    constexpr bool kFrontRightDriveMotorReversed = false;
-    constexpr bool kRearRightDriveMotorReversed = false;
+    constexpr bool kFrontLeftDriveMotorReversed = false;
+    constexpr bool kRearLeftDriveMotorReversed = false;
+    constexpr bool kFrontRightDriveMotorReversed = true;
+    constexpr bool kRearRightDriveMotorReversed = true;
 
     constexpr bool kGyroReversed = false;
 
@@ -104,13 +104,13 @@ namespace AutoConstants
 {
     using radians_per_second_squared_t = units::compound_unit<units::radians, units::inverse<units::squared<units::second>>>;
 
-    constexpr auto kMaxSpeed = units::meters_per_second_t(3.0);
-    constexpr auto kMaxAcceleration = units::meters_per_second_squared_t(3.0);
+    constexpr auto kMaxSpeed = units::meters_per_second_t(0.5);
+    constexpr auto kMaxAcceleration = units::meters_per_second_squared_t(1.0);
     constexpr auto kMaxAngularSpeed = units::radians_per_second_t(wpi::math::pi);
     constexpr auto kMaxAngularAcceleration = units::unit_t<radians_per_second_squared_t>(wpi::math::pi);
 
-    constexpr double kPXController = 0.5;
-    constexpr double kPYController = 0.5;
+    constexpr double kPXController = 0.25;
+    constexpr double kPYController = 0.25;
     constexpr double kPThetaController = 0.5;
 
     extern const frc::TrapezoidProfile<units::radians>::Constraints kThetaControllerConstraints;

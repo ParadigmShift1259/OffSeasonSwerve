@@ -61,10 +61,10 @@ DriveSubsystem::DriveSubsystem()
         kRearLeftTurningEncoderReversed,
         kRearLeftOffset,
         std::string("RearLeft")
-        },
+        }
 
-      m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
-      ,m_gyro(0)
+      , m_gyro(0)
+      , m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
 {
     SmartDashboard::PutBoolean("GetInputFromNetTable", true);
 
@@ -97,9 +97,15 @@ void DriveSubsystem::Periodic()
                     , m_rearRight.GetState());
    
     auto pose = m_odometry.GetPose();
+    auto x = pose.Translation().X().to<double>();
+    auto y = pose.Translation().Y().to<double>();
+    auto rot = pose.Rotation().Degrees().to<double>();
     SmartDashboard::PutNumber("ODO Pose x", pose.Translation().X().to<double>());
     SmartDashboard::PutNumber("ODO Pose y", pose.Translation().Y().to<double>());
     SmartDashboard::PutNumber("ODO Heading", pose.Rotation().Degrees().to<double>());
+    //cout << "ODO Pose x " << x;
+    //cout << " ODO Pose y " << y;
+    //cout << " ODO Heading " << rot << endl;
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
@@ -107,7 +113,8 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
     SmartDashboard::PutNumber("x speed", xSpeed.to<double>());
     SmartDashboard::PutNumber("y speed", ySpeed.to<double>());
     SmartDashboard::PutNumber("rotation", rot.to<double>());
-
+    //cout << "Inputs x " << xSpeed << 
+    
     frc::ChassisSpeeds chassisSpeeds;
     if (fieldRelative)
         chassisSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xSpeed, ySpeed, rot, GetHeadingAsRot2d());
@@ -118,7 +125,8 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
 
     kDriveKinematics.NormalizeWheelSpeeds(&states, AutoConstants::kMaxSpeed);
     
-    if (SmartDashboard::GetBoolean("GetInputFromNetTable", false))
+    //if (SmartDashboard::GetBoolean("GetInputFromNetTable", false))
+    if (false)
     {
         double angle = SmartDashboard::GetNumber("FrontLeft", 0.0);
         states[eFrontLeft].angle = frc::Rotation2d(radian_t(angle));
@@ -160,12 +168,12 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
 void DriveSubsystem::SetModuleStates(SwerveModuleStates desiredStates)
 {
     kDriveKinematics.NormalizeWheelSpeeds(&desiredStates, AutoConstants::kMaxSpeed);
-    cout<<"SetModuleStates() ";
-    cout<<" FrontLeft Angle: "<< desiredStates[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)desiredStates[eFrontLeft].speed;
-    cout<<" FrontRight Angle: "<< desiredStates[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)desiredStates[eFrontRight].speed;
-    cout<<" RearRight Angle: "<< desiredStates[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)desiredStates[eRearRight].speed;
-    cout<<" RearLeft Angle: "<< desiredStates[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)desiredStates[eRearLeft].speed;
-    cout<<"\n";
+    //cout<<"SetModuleStates() ";
+    //cout<<" FrontLeft Angle: "<< desiredStates[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)desiredStates[eFrontLeft].speed;
+    //cout<<" FrontRight Angle: "<< desiredStates[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)desiredStates[eFrontRight].speed;
+    //cout<<" RearRight Angle: "<< desiredStates[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)desiredStates[eRearRight].speed;
+    //cout<<" RearLeft Angle: "<< desiredStates[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)desiredStates[eRearLeft].speed;
+    //cout<<"\n";
     m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
     m_frontRight.SetDesiredState(desiredStates[eFrontRight]);
     m_rearRight.SetDesiredState(desiredStates[eRearRight]);
@@ -182,12 +190,19 @@ void DriveSubsystem::ResetEncoders()
 
 double DriveSubsystem::GetHeading()
 {
-    return std::remainder(m_gyro.GetFusedHeading(), 360.0) * (kGyroReversed ? -1. : 1.);
+    auto retVal = std::remainder(m_gyro.GetFusedHeading(), 360.0) * (kGyroReversed ? -1. : 1.);
+    if (retVal > 180.0)
+    {
+        retVal -= 360.0;
+    }
+
+    return retVal;
 }
 
 void DriveSubsystem::ZeroHeading()
 {
     m_gyro.ClearStickyFaults();
+    //m_gyro.SetFusedHeading(0.0, 0);
 }
 
 double DriveSubsystem::GetTurnRate()

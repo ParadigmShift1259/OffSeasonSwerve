@@ -55,7 +55,7 @@ public:
     void SetModuleStates(SwerveModuleStates desiredStates);
 
     /// Returns the heading of the robot.
-    /// @return the robot's heading in degrees, from 180 to 180
+    /// @return the robot's heading in degrees, from -180 to 180
     double GetHeading();
     frc::Rotation2d GetHeadingAsRot2d() { return frc::Rotation2d(degree_t(GetHeading())); }
 

@@ -33,8 +33,8 @@ RobotContainer::RobotContainer()
     // Set up default drive command
     m_drive.SetDefaultCommand(frc2::RunCommand(
         [this] {
-            m_drive.Drive(units::meters_per_second_t(m_driverController.GetY(frc::GenericHID::kLeftHand)),
-                          units::meters_per_second_t(m_driverController.GetX(frc::GenericHID::kLeftHand)),
+            m_drive.Drive(units::meters_per_second_t(m_driverController.GetY(frc::GenericHID::kLeftHand) * -1.0),
+                          units::meters_per_second_t(m_driverController.GetX(frc::GenericHID::kLeftHand) * -1.0),
                           units::radians_per_second_t(m_driverController.GetX(frc::GenericHID::kRightHand)),
                           false);
         },
@@ -49,6 +49,8 @@ void RobotContainer::ConfigureButtonBindings()
 
 frc2::Command *RobotContainer::GetAutonomousCommand()
 {
+    m_drive.ResetOdometry(frc::Pose2d(0_m, 0_m, frc::Rotation2d(0_deg)));
+
     // Set up config for trajectory
     frc::TrajectoryConfig config(AutoConstants::kMaxSpeed,
                                  AutoConstants::kMaxAcceleration);
@@ -62,6 +64,17 @@ frc2::Command *RobotContainer::GetAutonomousCommand()
         // Pass through these two interior waypoints, making an 's' curve path
         {frc::Translation2d(1_m, 1_m), frc::Translation2d(2_m, -1_m)},
         // End 3 meters straight ahead of where we started, facing forward
+        frc::Pose2d(3_m, 0_m, frc::Rotation2d(0_deg)),
+        // Pass the config
+        config
+    );
+
+    auto exampleTrajectory2 = frc::TrajectoryGenerator::GenerateTrajectory(
+        // Start at the origin facing the +X direction
+        frc::Pose2d(0_m, 0_m, frc::Rotation2d(0_deg)),
+        // Pass through these two interior waypoints, making an 's' curve path
+        {frc::Translation2d(1_m, 0_m), frc::Translation2d(2_m, 0_m)},
+        // End 2 meters straight ahead of where we started, facing forward
         frc::Pose2d(3_m, 0_m, frc::Rotation2d(0_deg)),
         // Pass the config
         config
