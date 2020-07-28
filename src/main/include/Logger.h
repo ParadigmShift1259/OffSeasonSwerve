@@ -42,12 +42,15 @@ public:
     , m_bAddToDashboard(bAddToDashboard)
   {
     int h = 0;
-    for (int i = E::eFirstInt; i < E::eLastInt; i++)
+    if (E::eFirstInt < E::eLastInt)
     {
-      m_dataInt.push_back(0);
-      if (m_bAddToDashboard)
+      for (int i = E::eFirstInt; i < E::eLastInt; i++)
       {
-        SmartDashboard::PutNumber(m_headerNames[h++], 0);
+        m_dataInt.push_back(0);
+        if (m_bAddToDashboard)
+        {
+          SmartDashboard::PutNumber(m_headerNames[h++], 0);
+        }
       }
     }
 
@@ -68,7 +71,7 @@ public:
 
   double& operator[](E index)
   {
-    return m_dataDouble[index];
+    return m_dataDouble[index - E::eFirstDouble];
   }
 
   const std::vector<std::string>& GetHeaderNames() const
@@ -131,7 +134,7 @@ class Logger
     {
       m_formattedIntData.clear();
       m_formattedDoubleData.clear();
-      
+
       auto& ints = data.GetInts();
       if (!ints.empty())
       {
@@ -142,7 +145,6 @@ class Logger
       if (!doubles.empty())
       {
         formatData(doubles);
-
       }
       logMsg(eInfo, func, line, m_formattedIntData.c_str(), m_formattedDoubleData.c_str());
     }

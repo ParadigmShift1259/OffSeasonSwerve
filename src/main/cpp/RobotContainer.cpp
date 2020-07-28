@@ -103,9 +103,9 @@ frc2::Command *RobotContainer::GetAutonomousCommand()
         std::move(swerveControllerCommand), std::move(swerveControllerCommand),
         frc2::InstantCommand(
             [this]() {
-                m_drive.Drive(units::meters_per_second_t(0),
-                              units::meters_per_second_t(0),
-                              units::radians_per_second_t(0), false);
+                m_drive.Drive(units::meters_per_second_t(0.0),
+                              units::meters_per_second_t(0.0),
+                              units::radians_per_second_t(0.0), false);
             },
             {}
         )
