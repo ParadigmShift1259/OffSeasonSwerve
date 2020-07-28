@@ -10,7 +10,6 @@
 #include <frc/Encoder.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
-//#include <frc/interfaces/Gyro.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/kinematics/SwerveDriveKinematics.h>
 #include <frc/kinematics/SwerveDriveOdometry.h>
@@ -19,6 +18,24 @@
 
 #include "Constants.h"
 #include "SwerveModule.h"
+#include "Logger.h"
+
+enum EDriveSubSystemLogData
+{
+    eFirstInt
+  , eLastInt = eFirstInt
+
+  , eFirstDouble
+  , eInputX = eFirstDouble
+  , eInputY
+  , eInputRot
+  , eOdoX
+  , eOdoY
+  , eOdoRot
+  , eLastDouble
+};
+
+const std::vector<std::string> c_headerNames{ "InputX", "InputY", "InputRot", "OdoX", "OdoY", "OdoRot"};
 
 class DriveSubsystem : public frc2::SubsystemBase
 {
@@ -30,7 +47,8 @@ public:
         eRearLeft,
         eRearRight
     };
-    DriveSubsystem();
+
+    DriveSubsystem(Logger& log);
 
     /// Will be called periodically whenever the CommandScheduler runs.
     void Periodic() override;
@@ -51,7 +69,7 @@ public:
     void ResetEncoders();
 
     /// Sets the drive SpeedControllers to a power from -1 to 1.
-    using SwerveModuleStates = std::array<frc::SwerveModuleState, 4>;
+    using SwerveModuleStates = std::array<frc::SwerveModuleState, DriveConstants::kNumSwerveModules>;
     void SetModuleStates(SwerveModuleStates desiredStates);
 
     /// Returns the heading of the robot.
@@ -77,23 +95,25 @@ public:
     meter_t kTrackWidth = 21.5_in; // Distance between centers of right and left wheels on robot
     meter_t kWheelBase = 23.5_in;  // Distance between centers of front and back wheels on robot
 
-    frc::SwerveDriveKinematics<4> kDriveKinematics{
-        frc::Translation2d(kWheelBase / 2, kTrackWidth / 2),    // +x, +y FL
-        frc::Translation2d(kWheelBase / 2, -kTrackWidth / 2),   // +x, -y FR
-        frc::Translation2d(-kWheelBase / 2, kTrackWidth / 2),   // -x, +y RL
-        frc::Translation2d(-kWheelBase / 2, -kTrackWidth / 2)}; // -x, -y RR
+    frc::SwerveDriveKinematics<DriveConstants::kNumSwerveModules> kDriveKinematics{
+        frc::Translation2d( kWheelBase / 2,  kTrackWidth / 2),    // +x, +y FL
+        frc::Translation2d( kWheelBase / 2, -kTrackWidth / 2),    // +x, -y FR
+        frc::Translation2d(-kWheelBase / 2,  kTrackWidth / 2),    // -x, +y RL
+        frc::Translation2d(-kWheelBase / 2, -kTrackWidth / 2)};   // -x, -y RR
 
 private:
+    using LogData = LogDataT<EDriveSubSystemLogData>;
+    
+    Logger& m_log;
+    bool m_bLoggedHeader = false;
+
     SwerveModule m_frontLeft;
     SwerveModule m_frontRight;
-    SwerveModule m_rearLeft;
     SwerveModule m_rearRight;
+    SwerveModule m_rearLeft;
 
-    // The gyro sensor
-    //frc::ADXRS450_Gyro m_gyro;
-
-    // Odometry class for tracking robot pose
-    // 4 defines the number of modules
-    frc::SwerveDriveOdometry<4> m_odometry;
     PigeonIMU m_gyro;
+    // Odometry class for tracking robot pose
+    frc::SwerveDriveOdometry<DriveConstants::kNumSwerveModules> m_odometry;
+    LogData m_logData;
 };

@@ -18,53 +18,63 @@ using namespace DriveConstants;
 using namespace std;
 using namespace frc;
 
-DriveSubsystem::DriveSubsystem()
-    : m_frontLeft{
-        kFrontLeftDriveMotorPort,
-        kFrontLeftTurningMotorPort,
-        kFrontLeftDriveEncoderPorts,
-        kFrontLeftTurningEncoderPorts,
-        kFrontLeftDriveMotorReversed,
-        kFrontLeftTurningEncoderReversed,
-        kFrontLeftOffset,
-        std::string("FrontLeft")
-        },
+DriveSubsystem::DriveSubsystem(Logger& log)
+    : m_log(log)
+    , m_frontLeft
+      {
+          kFrontLeftDriveMotorPort
+        , kFrontLeftTurningMotorPort
+        , kFrontLeftDriveEncoderPorts
+        , kFrontLeftTurningEncoderPorts
+        , kFrontLeftDriveMotorReversed
+        , kFrontLeftTurningEncoderReversed
+        , kFrontLeftOffset
+        , std::string("FrontLeft")
+        , log
+      }
 
-      m_frontRight{
-        kFrontRightDriveMotorPort,
-        kFrontRightTurningMotorPort,
-        kFrontRightDriveEncoderPorts,
-        kFrontRightTurningEncoderPorts,
-        kFrontRightDriveMotorReversed,
-        kFrontRightTurningEncoderReversed,
-        kFrontRightOffset,
-        std::string("FrontRight")
-        },
+    , m_frontRight
+      {
+          kFrontRightDriveMotorPort
+        , kFrontRightTurningMotorPort
+        , kFrontRightDriveEncoderPorts
+        , kFrontRightTurningEncoderPorts
+        , kFrontRightDriveMotorReversed
+        , kFrontRightTurningEncoderReversed
+        , kFrontRightOffset
+        , std::string("FrontRight")
+        , log
+      }
 
-      m_rearRight{
-        kRearRightDriveMotorPort,
-        kRearRightTurningMotorPort,
-        kRearRightDriveEncoderPorts,
-        kRearRightTurningEncoderPorts,
-        kRearRightDriveMotorReversed,
-        kRearRightTurningEncoderReversed,
-        kRearRightOffset,
-        std::string("RearRight")
-        },
+    , m_rearRight
+      {
+          kRearRightDriveMotorPort
+        , kRearRightTurningMotorPort
+        , kRearRightDriveEncoderPorts
+        , kRearRightTurningEncoderPorts
+        , kRearRightDriveMotorReversed
+        , kRearRightTurningEncoderReversed
+        , kRearRightOffset
+        , std::string("RearRight")
+        , log
+      }
 
-      m_rearLeft{
-        kRearLeftDriveMotorPort,
-        kRearLeftTurningMotorPort,
-        kRearLeftDriveEncoderPorts,
-        kRearLeftTurningEncoderPorts,
-        kRearLeftDriveMotorReversed,
-        kRearLeftTurningEncoderReversed,
-        kRearLeftOffset,
-        std::string("RearLeft")
-        }
+    , m_rearLeft
+      {
+          kRearLeftDriveMotorPort
+        , kRearLeftTurningMotorPort
+        , kRearLeftDriveEncoderPorts
+        , kRearLeftTurningEncoderPorts
+        , kRearLeftDriveMotorReversed
+        , kRearLeftTurningEncoderReversed
+        , kRearLeftOffset
+        , std::string("RearLeft")
+        , log
+      }
 
-      , m_gyro(0)
-      , m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
+    , m_gyro(0)
+    , m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
+    , m_logData(c_headerNames, true)
 {
     SmartDashboard::PutBoolean("GetInputFromNetTable", true);
 
@@ -97,24 +107,24 @@ void DriveSubsystem::Periodic()
                     , m_rearRight.GetState());
    
     auto pose = m_odometry.GetPose();
-    auto x = pose.Translation().X().to<double>();
-    auto y = pose.Translation().Y().to<double>();
-    auto rot = pose.Rotation().Degrees().to<double>();
-    SmartDashboard::PutNumber("ODO Pose x", pose.Translation().X().to<double>());
-    SmartDashboard::PutNumber("ODO Pose y", pose.Translation().Y().to<double>());
-    SmartDashboard::PutNumber("ODO Heading", pose.Rotation().Degrees().to<double>());
-    //cout << "ODO Pose x " << x;
-    //cout << " ODO Pose y " << y;
-    //cout << " ODO Heading " << rot << endl;
+     
+    m_logData[eOdoX] = pose.Translation().X().to<double>();
+    m_logData[eOdoY] = pose.Translation().Y().to<double>();
+    m_logData[eOdoRot] = pose.Rotation().Degrees().to<double>();
+    if (!m_bLoggedHeader)
+    {
+        m_bLoggedHeader = true;
+       	m_log.logHeader<EDriveSubSystemLogData>("DriveSubsystem::Periodic", __LINE__, m_logData);
+    }
+    m_log.logData<EDriveSubSystemLogData>("DriveSubsystem::Periodic", __LINE__, m_logData);
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
 {
-    SmartDashboard::PutNumber("x speed", xSpeed.to<double>());
-    SmartDashboard::PutNumber("y speed", ySpeed.to<double>());
-    SmartDashboard::PutNumber("rotation", rot.to<double>());
-    //cout << "Inputs x " << xSpeed << 
-    
+    m_logData[eInputX] = xSpeed.to<double>();
+    m_logData[eInputY] = ySpeed.to<double>();
+    m_logData[eInputRot] = rot.to<double>();
+
     frc::ChassisSpeeds chassisSpeeds;
     if (fieldRelative)
         chassisSpeeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(xSpeed, ySpeed, rot, GetHeadingAsRot2d());
@@ -153,27 +163,15 @@ void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpee
         states[eFrontLeft].speed = meters_per_second_t(speed);
     }
 
-    // cout<<"Drive() ";
-    // cout<<" FrontLeft Angle: "<< states[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)states[eFrontLeft].speed;
-    // cout<<" FrontRight Angle: "<< states[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)states[eFrontRight].speed;
-    // cout<<" RearRight Angle: "<< states[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)states[eRearRight].speed;
-    // cout<<" RearLeft Angle: "<< states[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)states[eRearLeft].speed;
-    // cout<<"\n";
     m_frontLeft.SetDesiredState(states[eFrontLeft]);
     m_frontRight.SetDesiredState(states[eFrontRight]);
-    m_rearLeft.SetDesiredState(states[eRearLeft]);
     m_rearRight.SetDesiredState(states[eRearRight]);
+    m_rearLeft.SetDesiredState(states[eRearLeft]);
 }
 
 void DriveSubsystem::SetModuleStates(SwerveModuleStates desiredStates)
 {
     kDriveKinematics.NormalizeWheelSpeeds(&desiredStates, AutoConstants::kMaxSpeed);
-    //cout<<"SetModuleStates() ";
-    //cout<<" FrontLeft Angle: "<< desiredStates[eFrontLeft].angle.Radians() <<" FrontLeft Speed: "<< (double)desiredStates[eFrontLeft].speed;
-    //cout<<" FrontRight Angle: "<< desiredStates[eFrontRight].angle.Radians() <<" FrontRight Speed: "<< (double)desiredStates[eFrontRight].speed;
-    //cout<<" RearRight Angle: "<< desiredStates[eRearRight].angle.Radians() <<" RearRight Speed: "<< (double)desiredStates[eRearRight].speed;
-    //cout<<" RearLeft Angle: "<< desiredStates[eRearLeft].angle.Radians() <<" RearLeft Speed: "<< (double)desiredStates[eRearLeft].speed;
-    //cout<<"\n";
     m_frontLeft.SetDesiredState(desiredStates[eFrontLeft]);
     m_frontRight.SetDesiredState(desiredStates[eFrontRight]);
     m_rearRight.SetDesiredState(desiredStates[eRearRight]);

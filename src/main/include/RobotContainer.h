@@ -18,6 +18,7 @@
 #include <frc2/command/RunCommand.h>
 
 #include "Constants.h"
+#include "Logger.h"
 #include "subsystems/DriveSubsystem.h"
 
 /**
@@ -30,11 +31,13 @@
 class RobotContainer
 {
 public:
-    RobotContainer();
+    RobotContainer(Logger& log);
 
     frc2::Command *GetAutonomousCommand();
 
 private:
+    Logger& m_log;
+
     // The driver's controller
     frc::XboxController m_driverController{OIConstants::kDriverControllerPort};
 

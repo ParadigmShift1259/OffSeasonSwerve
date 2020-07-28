@@ -10,11 +10,14 @@
 #include <frc/TimedRobot.h>
 #include <frc2/command/Command.h>
 
+#include "Logger.h"
 #include "RobotContainer.h"
 
 class Robot : public frc::TimedRobot
 {
 public:
+    Robot();
+
     void RobotInit() override;
     void RobotPeriodic() override;
     void DisabledInit() override;
@@ -26,6 +29,8 @@ public:
     void TestPeriodic() override;
 
 private:
+    Logger m_log;
+
     // Have it null by default so that if testing teleop it
     // doesn't have undefined behavior and potentially crash.
     frc2::Command *m_autonomousCommand = nullptr;

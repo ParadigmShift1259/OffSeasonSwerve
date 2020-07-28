@@ -24,6 +24,8 @@
 
 namespace DriveConstants
 {
+    constexpr int kNumSwerveModules = 4;
+
     constexpr int kFrontLeftDriveMotorPort = 1;
     constexpr int kFrontLeftTurningMotorPort = 2;
 

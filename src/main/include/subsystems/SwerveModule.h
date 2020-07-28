@@ -13,12 +13,16 @@
 #include <frc/geometry/Rotation2d.h>
 #include <frc/kinematics/SwerveModuleState.h>
 #include <frc/trajectory/TrapezoidProfile.h>
-#include <wpi/math>
-#include <string>
 
 #include <rev\CANSparkMax.h>
 #include <rev\CANEncoder.h>
+
+#include <wpi/math>
+
+#include <string>
+
 #include "Constants.h"
+#include "Logger.h"
 
 using namespace rev;
 using namespace units;
@@ -35,7 +39,8 @@ public:
     , bool driveEncoderReversed
     , bool turningEncoderReversed
     , double offSet
-    , std::string name);
+    , std::string name
+    , Logger& log);
 
     frc::SwerveModuleState GetState();
 
@@ -89,11 +94,9 @@ private:
     CANEncoder m_turnNeoEncoder = m_turningMotor.GetEncoder();
     frc::AnalogInput m_turningEncoder;
 
-    //bool m_reverseDriveEncoder;
-    //bool m_reverseTurningEncoder;
-
     //frc2::PIDController m_drivePIDController{ModuleConstants::kPModuleDriveController, 0, 0};
 
     double m_offSet;
     std::string m_name;
+    Logger& m_log;
 };

@@ -23,7 +23,9 @@
 
 using namespace DriveConstants;
 
-RobotContainer::RobotContainer()
+RobotContainer::RobotContainer(Logger& log)
+    : m_log(log)
+    , m_drive(log)
 {
     // Initialize all of your commands and subsystems here
 

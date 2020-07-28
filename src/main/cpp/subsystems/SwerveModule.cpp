@@ -21,28 +21,23 @@ SwerveModule::SwerveModule(int driveMotorChannel,
                            bool driveMotorReversed,
                            bool turningEncoderReversed,
                            double offSet,
-                           std::string name)
-                           
+                           std::string name,
+                           Logger& log)
     : m_driveMotor(driveMotorChannel, CANSparkMax::MotorType::kBrushless)
     , m_turningMotor(turningMotorChannel, CANSparkMax::MotorType::kBrushless)
     , m_driveEncoder(m_driveMotor)
+    , m_turnNeoEncoder(m_turningMotor)
     , m_turningEncoder(turningEncoderPorts[0])
-    //, m_reverseDriveEncoder(driveMotorReversed)
-    //, m_reverseTurningEncoder(turningEncoderReversed)
     , m_offSet(offSet)
     , m_name(name)
-    , m_turnNeoEncoder(m_turningMotor)
+    , m_log(log)
 {
     m_driveMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
     m_turningMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
 
-    //m_driveMotor.SetOpenLoopRampRate(0.1);
-    //m_turningMotor.SetOpenLoopRampRate(0.1);
-
     m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / (8.31 * 60.0)); // GetVelocity() will return meters per sec instead of RPM
     m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / 18.0); // 18 motor revolutions per wheel revolution
     
-    //m_driveEncoder.SetVelocityConversionFactor(1.0); // GetVelocity() will return meters per sec instead of RPM
     m_driveMotor.SetInverted(driveMotorReversed);
     m_turningMotor.SetInverted(false);
 
@@ -94,7 +89,7 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
     double tff = frc::SmartDashboard::GetNumber("Turn Feed Forward", 0);
     double tmax = frc::SmartDashboard::GetNumber("Turn Max Output", 0);
     double tmin = frc::SmartDashboard::GetNumber("Turn Min Output", 0);
-    double rotations = frc::SmartDashboard::GetNumber("Set Rotations", 0);
+    //double rotations = frc::SmartDashboard::GetNumber("Set Rotations", 0);
 
     // if PID coefficients on SmartDashboard have changed, write new values to controller
     if ((tp != ktP)) { m_turnPIDController.SetP(tp); ktP = tp; }
