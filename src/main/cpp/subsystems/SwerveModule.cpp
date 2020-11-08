@@ -7,7 +7,8 @@
 
 #include "subsystems/SwerveModule.h"
 
-#include <frc/SmartDashboard/SmartDashboard.h>
+#include <frc/shuffleboard/Shuffleboard.h>
+#include <frc/shuffleboard/ShuffleboardWidget.h>
 #include <frc/geometry/Rotation2d.h>
 #include <wpi/math>
 #include <iostream>
@@ -16,153 +17,124 @@
 
 SwerveModule::SwerveModule(int driveMotorChannel, 
                            int turningMotorChannel,
-                           const int driveEncoderPorts[2],
-                           const int turningEncoderPorts[2],
+                           const int driveEncoderPort,
+                           const int turningEncoderPort,
                            bool driveMotorReversed,
                            bool turningEncoderReversed,
-                           double offSet,
-                           std::string name,
+                           double offset,
+                           const std::string& name,
                            Logger& log)
     : m_driveMotor(driveMotorChannel, CANSparkMax::MotorType::kBrushless)
     , m_turningMotor(turningMotorChannel, CANSparkMax::MotorType::kBrushless)
     , m_driveEncoder(m_driveMotor)
     , m_turnNeoEncoder(m_turningMotor)
-    , m_turningEncoder(turningEncoderPorts[0])
-    , m_offSet(offSet)
+    , m_turningEncoder(turningEncoderPort)
+    , m_offset(offset)
     , m_name(name)
+    , m_logData(c_headerNamesSwerveModule, true, name)
     , m_log(log)
 {
     m_driveMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
     m_turningMotor.SetSmartCurrentLimit(ModuleConstants::kMotorCurrentLimit);
 
-    m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / (8.31 * 60.0)); // GetVelocity() will return meters per sec instead of RPM
-    m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / 18.0); // 18 motor revolutions per wheel revolution
+    // Set up GetVelocity() to return meters per sec instead of RPM
+    m_driveEncoder.SetVelocityConversionFactor(wpi::math::pi * ModuleConstants::kWheelDiameterMeters / (DriveConstants::kDriveGearRatio * 60.0));
+    m_turnNeoEncoder.SetPositionConversionFactor(2 * wpi::math::pi / DriveConstants::kTurnMotorRevsPerWheelRev);
     
     m_driveMotor.SetInverted(driveMotorReversed);
     m_turningMotor.SetInverted(false);
 
-    m_turnPIDController.SetP(ktP);
-    m_turnPIDController.SetI(ktI);
-    m_turnPIDController.SetD(ktD);
-    m_turnPIDController.SetIZone(ktIz);
-    m_turnPIDController.SetFF(ktFF);
-    m_turnPIDController.SetOutputRange(ktMinOutput, ktMaxOutput);
+    m_drivePidParams.Load(m_drivePIDController);
+    m_turnPidParams.Load(m_turnPIDController);
 
-    m_drivePIDController.SetP(kdP);
-    m_drivePIDController.SetD(kdD);
-    m_drivePIDController.SetFF(kdFF);
-    m_drivePIDController.SetOutputRange(kdMinOutput, kdMaxOutput);
-
-    double initPosition = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
+    double initPosition = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offset);
     m_turnNeoEncoder.SetPosition(initPosition); // Tell the encoder where the absolute encoder is
 
-    frc::SmartDashboard::PutNumber("Turn P Gain", ktP);
-    frc::SmartDashboard::PutNumber("Turn I Gain", ktI);
-    frc::SmartDashboard::PutNumber("Turn D Gain", ktD);
-    frc::SmartDashboard::PutNumber("Turn I Zone", ktIz);
-    frc::SmartDashboard::PutNumber("Turn Feed Forward", ktFF);
-    frc::SmartDashboard::PutNumber("Turn Max Output", ktMaxOutput);
-    frc::SmartDashboard::PutNumber("Turn Min Output", ktMinOutput);
-    frc::SmartDashboard::PutNumber("Set Rotations", 0);
-
-    frc::SmartDashboard::PutNumber("Drive P Gain", kdP);
-    frc::SmartDashboard::PutNumber("Drive D Gain", kdD);
-    frc::SmartDashboard::PutNumber("Drive Feed Forward", kdFF);
-    frc::SmartDashboard::PutNumber("Drive Max Output", kdMaxOutput);
-    frc::SmartDashboard::PutNumber("Drive Min Output", kdMinOutput);
+    ShuffleboardTab& tab = Shuffleboard::GetTab("AbsEncTuning");
+    std::string nteName = m_name + " offset";
+    wpi::StringMap<std::shared_ptr<nt::Value>> sliderPropMap
+    {
+          std::make_pair("Min", nt::Value::MakeDouble(0.0))
+        , std::make_pair("Max", nt::Value::MakeDouble(2 * wpi::math::pi))
+        , std::make_pair("Block increment", nt::Value::MakeDouble(wpi::math::pi / 180))
+    };
+    m_nteAbsEncTuningOffset    = tab.Add(nteName, m_offset)
+                                    .WithWidget(frc::BuiltInWidgets::kNumberSlider)
+                                    .WithProperties(sliderPropMap)
+                                    .GetEntry();
 }
 
 frc::SwerveModuleState SwerveModule::GetState()
 {
-    // TODO use the NEO encoder????
-    double angle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
+    double angle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offset);
     return {meters_per_second_t{m_driveEncoder.GetVelocity()}, frc::Rotation2d(radian_t(angle))};
 }
 
 void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 {
     // Retrieving turn PID values from SmartDashboard
-    double tp = frc::SmartDashboard::GetNumber("Turn P Gain", 0);
-    double ti = frc::SmartDashboard::GetNumber("Turn I Gain", 0);
-    double td = frc::SmartDashboard::GetNumber("Turn D Gain", 0);
-    double tiz = frc::SmartDashboard::GetNumber("Turn I Zone", 0);
-    double tff = frc::SmartDashboard::GetNumber("Turn Feed Forward", 0);
-    double tmax = frc::SmartDashboard::GetNumber("Turn Max Output", 0);
-    double tmin = frc::SmartDashboard::GetNumber("Turn Min Output", 0);
-    //double rotations = frc::SmartDashboard::GetNumber("Set Rotations", 0);
-
-    // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if ((tp != ktP)) { m_turnPIDController.SetP(tp); ktP = tp; }
-    if ((ti != ktI)) { m_turnPIDController.SetI(ti); ktI = ti; }
-    if ((td != ktD)) { m_turnPIDController.SetD(td); ktD = td; }
-    if ((tiz != ktIz)) { m_turnPIDController.SetIZone(tiz); ktIz = tiz; }
-    if ((tff != ktFF)) { m_turnPIDController.SetFF(tff); ktFF = tff; }
-    if ((tmax != ktMaxOutput) || (tmin != ktMinOutput))
-    { 
-        m_turnPIDController.SetOutputRange(tmin, tmax);
-        ktMinOutput = tmin; ktMaxOutput = tmax; 
-    }
-
-    // Retrieving drive PID values from SmartDashboard
-    double dp = frc::SmartDashboard::GetNumber("Drive P Gain", 0);
-    double dd = frc::SmartDashboard::GetNumber("Drive D Gain", 0);
-    double dff = frc::SmartDashboard::GetNumber("Drive Feed Forward", 0);
-    double dmax = frc::SmartDashboard::GetNumber("Drive Max Output", 0);
-    double dmin = frc::SmartDashboard::GetNumber("Drive Min Output", 0);
-
-    // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if ((dp != kdP)) { m_drivePIDController.SetP(dp); kdP = dp; }
-    if ((dd != kdD)) { m_drivePIDController.SetD(dd); kdD = dd; }
-    if ((dff != kdFF)) { m_drivePIDController.SetFF(dff); kdFF = dff; }
-    if ((dmax != kdMaxOutput) || (dmin != kdMinOutput))
-    { 
-        m_drivePIDController.SetOutputRange(dmin, dmax);
-        kdMinOutput = dmin; kdMaxOutput = dmax; 
-    }
-
-    // Set velocity reference of drivePIDController
-    m_drivePIDController.SetReference(state.speed.to<double>(), rev::ControlType::kVelocity);
+    m_drivePidParams.LoadFromNetworkTable(m_drivePIDController);
+    m_turnPidParams.LoadFromNetworkTable(m_turnPIDController);
 
     // Find absolute encoder and NEO encoder positions
-    double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offSet);
+    double absAngle = VoltageToRadians(m_turningEncoder.GetVoltage(), m_offset);
     double currentPosition = m_turnNeoEncoder.GetPosition();
 
     // Calculate new turn position given current Neo position, current absolute encoder position, and desired state position
-//#define USE_ABS_ENC
+    bool bOutputReverse = false;
+#define USE_ABS_ENC
 #ifdef USE_ABS_ENC
-    double minTurnRads = MinTurnRads(absAngle, state.angle.Radians().to<double>());
+    double minTurnRads = MinTurnRads(absAngle, state.angle.Radians().to<double>(), bOutputReverse);
 #else
-    double minTurnRads = MinTurnRads(currentPosition, state.angle.Radians().to<double>());
+    double minTurnRads = MinTurnRads(currentPosition, state.angle.Radians().to<double>(), bOutputReverse);
 #endif
-    double newPosition = currentPosition + minTurnRads;
+    double direction = 1.0;
+    if (bOutputReverse)
+        direction = -1.0;
+    // m_driveMotor.SetInverted(bOutputReverse);
+
     // Set position reference of turnPIDController
-    m_turnPIDController.SetReference(newPosition, rev::ControlType::kPosition);
+    double newPosition = currentPosition + minTurnRads;
 
-    std::string dbvalname;
+//#define TUNE_ABS_ENC
+#ifdef TUNE_ABS_ENC
+    m_drivePIDController.SetReference(0.0, rev::ControlType::kVelocity);
+#endif
 
-    dbvalname = m_name + " meas angle";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), absAngle);
-
-    dbvalname = m_name + " minTurnRads";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), minTurnRads);
-    dbvalname = m_name + " currentPosition";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), currentPosition);
-    dbvalname = m_name + " newPosition";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), newPosition);
-
-    dbvalname = m_name + " SetPoint";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), newPosition);
-    dbvalname = m_name + " ProcessVariable";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_turnNeoEncoder.GetPosition());
-
-    dbvalname = m_name + " driveOutput";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_driveMotor.GetAppliedOutput());
+    // If we're stopping then stop the drive motors and leave the angle alone
+    if (state.speed.to<double>() == 0.0)
+    {
+#ifndef TUNE_ABS_ENC
+        m_drivePIDController.SetReference(state.speed.to<double>(), rev::ControlType::kVelocity);
+#endif
+    }
+    else
+    {
+        // Otherwise set the angle
+        m_turnPIDController.SetReference(newPosition, rev::ControlType::kPosition);
+    }
     
-    dbvalname = m_name + " driveMeasVelocity";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), m_driveEncoder.GetVelocity());
+    // Let the turn complete before we activate the motor
+    if (fabs(currentPosition - newPosition) < 0.35)
+    {
+        // Set velocity reference of drivePIDController
+#ifndef TUNE_ABS_ENC
+        m_drivePIDController.SetReference(direction * state.speed.to<double>(), rev::ControlType::kVelocity);
+#endif
+    }
 
-    dbvalname = m_name + " driveSetPtVelocity";
-    frc::SmartDashboard::PutNumber(dbvalname.c_str(), state.speed.to<double>());
+    static const std::string FuncModule = "SwerveModule::SetDesiredState" + m_name;
+    m_logData[ESwerveModuleLogData::eDesiredAngle] = state.angle.Radians().to<double>();
+    m_logData[ESwerveModuleLogData::eTurnEncVolts] = m_turningEncoder.GetVoltage();
+    m_logData[ESwerveModuleLogData::eTurnEncAngle] = absAngle;
+    m_logData[ESwerveModuleLogData::eMinTurnRads] = minTurnRads;
+    m_logData[ESwerveModuleLogData::eTurnNeoPidRefPos] = newPosition;
+    m_logData[ESwerveModuleLogData::eTurnNeoEncoderPos] = currentPosition;
+    m_logData[ESwerveModuleLogData::eTurnOutputDutyCyc] = m_turningMotor.GetAppliedOutput();
+    m_logData[ESwerveModuleLogData::eDrivePidRefSpeed] = state.speed.to<double>();
+    m_logData[ESwerveModuleLogData::eDriveEncVelocity] = m_driveEncoder.GetVelocity();
+    m_logData[ESwerveModuleLogData::eDriveOutputDutyCyc] = m_driveMotor.GetAppliedOutput();
+    m_log.logData<ESwerveModuleLogData>(FuncModule.c_str(), __LINE__, m_logData);
 }
 
 void SwerveModule::ResetEncoders()
@@ -170,15 +142,11 @@ void SwerveModule::ResetEncoders()
     m_driveEncoder.SetPosition(0.0); 
 }
 
-double SwerveModule::VoltageToRadians(double Voltage, double OffSet)
+double SwerveModule::VoltageToRadians(double Voltage, double offset)
 {
-    double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - OffSet + 2 * wpi::math::pi, 2 * wpi::math::pi);
+    offset = m_nteAbsEncTuningOffset.GetDouble(m_offset);
+    double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - offset + 2 * wpi::math::pi, 2 * wpi::math::pi);
     angle = 2 * wpi::math::pi - angle;
-
-    // if (angle > wpi::math::pi)
-    // {
-    //     angle -= 2 * wpi::math::pi;
-    // }
 
     return angle;
 }
@@ -187,30 +155,27 @@ double SwerveModule::VoltageToDegrees(double voltage, double offSet)
 {
     double angle = fmod(voltage * DriveConstants::KTurnVoltageToDegrees - offSet + 360.0, 360.0);
 
-    //if (angle > 180.0)
-    // {
-    //     angle -= 360.0;
-    // }
-
     return angle;
 }
 
 // Convert any angle theta in radians to its equivalent on the interval [0, 2pi]
 double SwerveModule::ZeroTo2PiRads(double theta)
-    {
-    theta = fmod(theta, 2 * M_PI);
+{
+    theta = fmod(theta, 2 * wpi::math::pi);
     if (theta < 0)
-        theta += 2 * M_PI;
+        theta += 2 * wpi::math::pi;
         
     return theta;
-    }
+}
 
 // Convert any angle theta in radians to its equivalent on the interval [-pi, pi]
 double SwerveModule::NegPiToPiRads(double theta)
 {
     theta = ZeroTo2PiRads(theta);
-    if (theta > M_PI)
-        theta -= 2 * M_PI;
+    if (theta > wpi::math::pi)
+        theta -= 2 * wpi::math::pi;
+    else if (theta < -1.0 * wpi::math::pi)
+        theta += 2 * wpi::math::pi;
         
     return theta;
 }
@@ -218,16 +183,29 @@ double SwerveModule::NegPiToPiRads(double theta)
 // Determine the smallest magnitude delta angle that can be added to initial angle that will 
 // result in an angle equivalent (but not necessarily equal) to final angle. 
 // All angles in radians
-double SwerveModule::MinTurnRads(double init, double final)
+// 
+// init final   angle1   angle2 
+double SwerveModule::MinTurnRads(double init, double final, bool& bOutputReverse)
 {
     init = ZeroTo2PiRads(init);
     final = ZeroTo2PiRads(final);
 
-    double turn = final - init;
-    if (turn > M_PI)
-        turn -= 2 * M_PI;
-    else if (turn < -M_PI)
-        turn += 2 * M_PI;
-        
-    return turn;
+    // The shortest turn angle may be acheived by reversing the motor output direction
+    double angle1 = final - init;
+    double angle2 = final + wpi::math::pi - init;
+
+    NegPiToPiRads(angle1);
+    NegPiToPiRads(angle2);
+
+    // Choose the smallest angle and determine reverse flag
+    if (fabs(angle1) <= fabs(angle2))
+    {
+        bOutputReverse = false;
+        return angle1;
+    } 
+    else
+    {
+        bOutputReverse = true;
+        return angle2;
+    }
 }

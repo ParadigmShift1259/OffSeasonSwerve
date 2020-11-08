@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include <iostream>
 #include <frc/SmartDashBoard/SmartDashboard.h>
+#include <frc/shuffleboard/Shuffleboard.h>
 
 using namespace DriveConstants;
 using namespace std;
@@ -20,12 +21,13 @@ using namespace frc;
 
 DriveSubsystem::DriveSubsystem(Logger& log)
     : m_log(log)
+    , m_logData(c_headerNamesDriveSubsystem, true, "")
     , m_frontLeft
       {
           kFrontLeftDriveMotorPort
         , kFrontLeftTurningMotorPort
-        , kFrontLeftDriveEncoderPorts
-        , kFrontLeftTurningEncoderPorts
+        , kFrontLeftDriveEncoderPort
+        , kFrontLeftTurningEncoderPort
         , kFrontLeftDriveMotorReversed
         , kFrontLeftTurningEncoderReversed
         , kFrontLeftOffset
@@ -37,8 +39,8 @@ DriveSubsystem::DriveSubsystem(Logger& log)
       {
           kFrontRightDriveMotorPort
         , kFrontRightTurningMotorPort
-        , kFrontRightDriveEncoderPorts
-        , kFrontRightTurningEncoderPorts
+        , kFrontRightDriveEncoderPort
+        , kFrontRightTurningEncoderPort
         , kFrontRightDriveMotorReversed
         , kFrontRightTurningEncoderReversed
         , kFrontRightOffset
@@ -50,8 +52,8 @@ DriveSubsystem::DriveSubsystem(Logger& log)
       {
           kRearRightDriveMotorPort
         , kRearRightTurningMotorPort
-        , kRearRightDriveEncoderPorts
-        , kRearRightTurningEncoderPorts
+        , kRearRightDriveEncoderPort
+        , kRearRightTurningEncoderPort
         , kRearRightDriveMotorReversed
         , kRearRightTurningEncoderReversed
         , kRearRightOffset
@@ -63,8 +65,8 @@ DriveSubsystem::DriveSubsystem(Logger& log)
       {
           kRearLeftDriveMotorPort
         , kRearLeftTurningMotorPort
-        , kRearLeftDriveEncoderPorts
-        , kRearLeftTurningEncoderPorts
+        , kRearLeftDriveEncoderPort
+        , kRearLeftTurningEncoderPort
         , kRearLeftDriveMotorReversed
         , kRearLeftTurningEncoderReversed
         , kRearLeftOffset
@@ -74,7 +76,6 @@ DriveSubsystem::DriveSubsystem(Logger& log)
 
     , m_gyro(0)
     , m_odometry{kDriveKinematics, GetHeadingAsRot2d(), frc::Pose2d()}
-    , m_logData(c_headerNames, true)
 {
     SmartDashboard::PutBoolean("GetInputFromNetTable", true);
 
@@ -108,22 +109,25 @@ void DriveSubsystem::Periodic()
    
     auto pose = m_odometry.GetPose();
      
-    m_logData[eOdoX] = pose.Translation().X().to<double>();
-    m_logData[eOdoY] = pose.Translation().Y().to<double>();
-    m_logData[eOdoRot] = pose.Rotation().Degrees().to<double>();
-    if (!m_bLoggedHeader)
-    {
-        m_bLoggedHeader = true;
-       	m_log.logHeader<EDriveSubSystemLogData>("DriveSubsystem::Periodic", __LINE__, m_logData);
-    }
+    m_logData[EDriveSubSystemLogData::eOdoX] = pose.Translation().X().to<double>();
+    m_logData[EDriveSubSystemLogData::eOdoY] = pose.Translation().Y().to<double>();
+    m_logData[EDriveSubSystemLogData::eOdoRot] = pose.Rotation().Degrees().to<double>();
     m_log.logData<EDriveSubSystemLogData>("DriveSubsystem::Periodic", __LINE__, m_logData);
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
 {
-    m_logData[eInputX] = xSpeed.to<double>();
-    m_logData[eInputY] = ySpeed.to<double>();
-    m_logData[eInputRot] = rot.to<double>();
+    m_logData[EDriveSubSystemLogData::eInputX] = xSpeed.to<double>();
+    m_logData[EDriveSubSystemLogData::eInputY] = ySpeed.to<double>();
+    m_logData[EDriveSubSystemLogData::eInputRot] = rot.to<double>();
+
+    // if (xSpeed.to<double>() == 0.0 && ySpeed.to<double>() == 0.0 && rot.to<double>() == 0.0)
+    // {
+    //     states[eFrontLeft].angle = frc::Rotation2d(radian_t(0.0));
+    //     states[eFrontRight].angle = frc::Rotation2d(radian_t(0.0));
+    //     states[eRearLeft].angle = frc::Rotation2d(radian_t(0.0));
+    //     states[eRearRight].angle = frc::Rotation2d(radian_t(0.0));
+    // }
 
     frc::ChassisSpeeds chassisSpeeds;
     if (fieldRelative)

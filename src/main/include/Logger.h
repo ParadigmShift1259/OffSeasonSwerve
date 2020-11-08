@@ -7,13 +7,12 @@
     
 */
 
-
 #ifndef SRC_Logger_H_
 #define SRC_Logger_H_
 
 #include <stdio.h>
 #include <frc\timer.h>
-#include <frc/SmartDashBoard/SmartDashboard.h>
+#include <frc/shuffleboard/Shuffleboard.h>
 
 #include <vector>
 #include <string>
@@ -37,29 +36,36 @@ template <typename E>
 class LogDataT
 {
 public:
-  LogDataT(const std::vector<std::string>& headerNames, bool bAddToDashboard)
+  LogDataT(const std::vector<std::string>& headerNames, bool bAddToDashboard, const std::string& dashboardPrefix)
     : m_headerNames(headerNames)
     , m_bAddToDashboard(bAddToDashboard)
+    , m_dashboardPrefix(dashboardPrefix)
   {
+    ShuffleboardTab& tab = Shuffleboard::GetTab("LogShadow");
+
     int h = 0;
     if (E::eFirstInt < E::eLastInt)
     {
-      for (int i = E::eFirstInt; i < E::eLastInt; i++)
+      for (int i = (int)E::eFirstInt; i < (int)E::eLastInt; i++)
       {
         m_dataInt.push_back(0);
         if (m_bAddToDashboard)
         {
-          SmartDashboard::PutNumber(m_headerNames[h++], 0);
+          std::string header = dashboardPrefix + m_headerNames[h++];
+          m_netTableEntries.push_back(tab.Add(header, 0).GetEntry());
+          m_netTableEntries.back().SetDouble(0.0);
         }
       }
     }
 
-    for (int i = E::eFirstDouble; i < E::eLastDouble; i++)
+    for (int i = (int)E::eFirstDouble; i < (int)E::eLastDouble; i++)
     {
       m_dataDouble.push_back(0.0);
       if (m_bAddToDashboard)
       {
-        SmartDashboard::PutNumber(m_headerNames[h++], 0.0);
+        std::string header = dashboardPrefix + m_headerNames[h++];
+        m_netTableEntries.push_back(tab.Add(header, 0).GetEntry());
+        m_netTableEntries.back().SetDouble(0.0);
       }
     }
   }
@@ -71,7 +77,7 @@ public:
 
   double& operator[](E index)
   {
-    return m_dataDouble[index - E::eFirstDouble];
+    return m_dataDouble[(int)index - (int)E::eFirstDouble];
   }
 
   const std::vector<std::string>& GetHeaderNames() const
@@ -89,11 +95,37 @@ public:
     return m_dataDouble;
   }
 
+  void UpdateDashboard()
+  {
+    if (m_bAddToDashboard)
+    {
+      int h = 0;
+      if (E::eFirstInt < E::eLastInt)
+      {
+        for (int i = (int)E::eFirstInt; i < (int)E::eLastInt; i++)
+        {
+          m_netTableEntries[h++].SetDouble((double)m_dataInt[i]);
+        }
+      }
+
+      for (int i = (int)E::eFirstDouble; i < (int)E::eLastDouble; i++)
+      {
+        m_netTableEntries[h++].SetDouble(m_dataDouble[i - (int)E::eFirstDouble]);
+      }
+    }
+  }
+
+  bool LoggedHeader() const { return m_bLoggedHeader; }
+  void SetHeaderLogged() { m_bLoggedHeader = true; }
+
 private:
   std::vector<std::string> m_headerNames;
+  std::string m_dashboardPrefix;
   std::vector<int> m_dataInt;
   std::vector<double> m_dataDouble;
   bool m_bAddToDashboard;
+  bool m_bLoggedHeader = false;
+  std::vector<nt::NetworkTableEntry> m_netTableEntries;
 };
 
 class Logger
@@ -125,12 +157,12 @@ class Logger
       {
         out += hn + ',';
       }
-      out.erase(out.size() - 1, 1);
+      out.erase(out.size() - 1, 1);           // Remove the trailing comma
       logMsg(eInfo, func, line, out.c_str());
     }
     
     template <typename E>
-    void logData(const char* func, const int line, const LogDataT<E>& data)
+    void logData(const char* func, const int line, LogDataT<E>& data)
     {
       m_formattedIntData.clear();
       m_formattedDoubleData.clear();
@@ -146,7 +178,31 @@ class Logger
       {
         formatData(doubles);
       }
-      logMsg(eInfo, func, line, m_formattedIntData.c_str(), m_formattedDoubleData.c_str());
+
+      if (!data.LoggedHeader())
+      {
+          data.SetHeaderLogged();
+          logHeader(func, line, data);
+      }
+
+      if (!ints.empty() && !doubles.empty())
+      {
+        logMsg(eInfo, func, line, m_formattedIntData.c_str(), m_formattedDoubleData.c_str());
+      }
+      else if (!ints.empty())
+      {
+        logMsg(eInfo, func, line, m_formattedIntData.c_str());
+      }
+      else
+      {
+        logMsg(eInfo, func, line, m_formattedDoubleData.c_str());
+      }
+      
+      // Only update the dashboard once a second
+      if (m_timer.HasPeriodPassed(1.0))
+      {
+        data.UpdateDashboard();
+      }
     }
 
   protected:

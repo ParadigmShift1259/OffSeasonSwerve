@@ -36,6 +36,18 @@ public:
     frc2::Command *GetAutonomousCommand();
 
 private:
+    double Deadzone(double inputValue, double deadzone)
+    {
+        if (fabs(inputValue) <= deadzone)
+        {
+            // If the input is small return 0
+            return 0.0;
+        }
+        
+        // Otherwise hand back the input value
+        return inputValue;
+    }    
+    
     Logger& m_log;
 
     // The driver's controller
@@ -45,9 +57,17 @@ private:
 
     // The robot's subsystems
     DriveSubsystem m_drive;
+    // m_units::meters_per_second_t m_xInput;      //!< Last x input value
+    // units::meters_per_second_t m_yInput;        //!< Last y input value
+    // units::radians_per_second_t m_rotInput;     //!< Last rotation input value
 
-    // The chooser for the autonomous routines
+     // The chooser for the autonomous routin;
     frc::SendableChooser<frc2::Command *> m_chooser;
+
+    nt::NetworkTableEntry m_inputXentry;
+    nt::NetworkTableEntry m_inputYentry;
+    nt::NetworkTableEntry m_inputRotentry;
+
 
     void ConfigureButtonBindings();
 };

@@ -126,8 +126,9 @@ void Logger::formatData(const vector<double*>& data)
 
     for (size_t i = 0; i < c_numDataPts; i++)
     {
-        out += sprintf(out, "%.3f%s", *data[i], i == c_numDataPts - 1 ? "" : ",");
-		if (out - m_formattedDoubleData.c_str() >= c_totalSz)
+        //out += sprintf(out, "%.3f%s", *data[i], i == c_numDataPts - 1 ? "" : ",");
+        out += sprintf(out, "%.3f%c", *data[i], i < c_numDataPts - 1 ? ',' : ' ');
+ 		if (out - m_formattedDoubleData.c_str() >= c_totalSz)
 		{
 			break;
 		}
@@ -145,8 +146,9 @@ void Logger::formatData(const vector<double>& data)
 
     for (size_t i = 0; i < c_numDataPts; i++)
     {
-        out += sprintf(out, "%.3f%s", data[i], i == c_numDataPts - 1 ? "" : ",");
-		if (out - m_formattedDoubleData.c_str() >= c_totalSz)
+        //out += sprintf(out, "%.3f%s", data[i], i == c_numDataPts - 1 ? "" : ",");
+        out += sprintf(out, "%.3f%c", data[i], i < c_numDataPts - 1 ? ',' : ' ');
+ 		if (out - m_formattedDoubleData.c_str() >= c_totalSz)
 		{
 			break;
 		}
@@ -164,7 +166,8 @@ void Logger::formatData(const vector<int*>& data)
 
     for (size_t i = 0; i < c_numDataPts; i++)
     {
-        out += sprintf(out, "%6d%s", *data[i], i == c_numDataPts - 1 ? "" : ",");
+        //out += sprintf(out, "%6d%s", *data[i], i == c_numDataPts - 1 ? "" : ",");
+        out += sprintf(out, "%6d%c", *data[i], i < c_numDataPts - 1 ? ',' : ' ');
         if (out - m_formattedIntData.c_str() >= c_totalSz)
         {
             break;
@@ -183,7 +186,8 @@ void Logger::formatData(const vector<int>& data)
 
     for (size_t i = 0; i < c_numDataPts; i++)
     {
-        out += sprintf(out, "%6d%s", data[i], i == c_numDataPts - 1 ? "" : ",");
+        //out += sprintf(out, "%6d%s", data[i], i == c_numDataPts - 1 ? "" : ",");
+        out += sprintf(out, "%6d%c", data[i], i < c_numDataPts - 1 ? ',' : ' ');
         if (out - m_formattedIntData.c_str() >= c_totalSz)
         {
             break;

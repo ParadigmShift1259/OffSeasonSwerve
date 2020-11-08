@@ -26,37 +26,37 @@ namespace DriveConstants
 {
     constexpr int kNumSwerveModules = 4;
 
-    constexpr int kFrontLeftDriveMotorPort = 1;
-    constexpr int kFrontLeftTurningMotorPort = 2;
+    constexpr int kFrontLeftDriveMotorPort    = 1;
+    constexpr int kFrontLeftTurningMotorPort  = 2;
 
-    constexpr int kFrontRightDriveMotorPort = 3;
+    constexpr int kFrontRightDriveMotorPort   = 3;
     constexpr int kFrontRightTurningMotorPort = 4;
 
-    constexpr int kRearRightDriveMotorPort = 5;
-    constexpr int kRearRightTurningMotorPort = 6;
+    constexpr int kRearRightDriveMotorPort    = 5;
+    constexpr int kRearRightTurningMotorPort  = 6;
 
-    constexpr int kRearLeftDriveMotorPort = 7;
-    constexpr int kRearLeftTurningMotorPort = 8;
+    constexpr int kRearLeftDriveMotorPort     = 7;
+    constexpr int kRearLeftTurningMotorPort   = 8;
 
-    constexpr int kFrontLeftTurningEncoderPorts[2]{0, 0};
-    constexpr int kFrontRightTurningEncoderPorts[2]{1, 1};
-    constexpr int kRearRightTurningEncoderPorts[2]{2, 2};
-    constexpr int kRearLeftTurningEncoderPorts[2]{3, 3};
+    constexpr int kFrontLeftTurningEncoderPort  = 0;
+    constexpr int kFrontRightTurningEncoderPort = 1;
+    constexpr int kRearRightTurningEncoderPort  = 2;
+    constexpr int kRearLeftTurningEncoderPort   = 3;
 
-    constexpr bool kFrontLeftTurningEncoderReversed = false;
-    constexpr bool kRearLeftTurningEncoderReversed = true;
+    constexpr bool kFrontLeftTurningEncoderReversed  = false;
+    constexpr bool kRearLeftTurningEncoderReversed   = true;
     constexpr bool kFrontRightTurningEncoderReversed = false;
-    constexpr bool kRearRightTurningEncoderReversed = true;
+    constexpr bool kRearRightTurningEncoderReversed  = true;
 
-    constexpr int kFrontLeftDriveEncoderPorts[2]{0, 1};
-    constexpr int kRearLeftDriveEncoderPorts[2]{2, 3};
-    constexpr int kFrontRightDriveEncoderPorts[2]{4, 5};
-    constexpr int kRearRightDriveEncoderPorts[2]{6, 7};
+    constexpr int kFrontLeftDriveEncoderPort  = 1;
+    constexpr int kRearLeftDriveEncoderPort   = 3;
+    constexpr int kFrontRightDriveEncoderPort = 5;
+    constexpr int kRearRightDriveEncoderPort  = 7;
 
-    constexpr bool kFrontLeftDriveMotorReversed = false;
-    constexpr bool kRearLeftDriveMotorReversed = false;
+    constexpr bool kFrontLeftDriveMotorReversed  = false;
+    constexpr bool kRearLeftDriveMotorReversed   = false;
     constexpr bool kFrontRightDriveMotorReversed = true;
-    constexpr bool kRearRightDriveMotorReversed = true;
+    constexpr bool kRearRightDriveMotorReversed  = true;
 
     constexpr bool kGyroReversed = false;
 
@@ -75,13 +75,18 @@ namespace DriveConstants
     //constexpr double kPFrontRightVel = 0.5;
     //constexpr double kPRearRightVel = 0.5;
 
-    constexpr double kFrontLeftOffset = 3.14;
-    constexpr double kFrontRightOffset = 5.07; //5.66;
-    constexpr double kRearLeftOffset = 3.34;//4.29;
-    constexpr double kRearRightOffset = 0.63;//5.29;
+    constexpr double kFrontLeftOffset   = 3.142;         // 3.14;
+    constexpr double kFrontRightOffset  = 5.105;         // 5.07;         //5.66;
+    constexpr double kRearLeftOffset    = 3.375;         // 3.34;         //4.29;
+    constexpr double kRearRightOffset   = 0.665;         // 0.63;         //5.29;
 
-    constexpr double kTurnVoltageToRadians = 2.0 * wpi::math::pi / 4.93;
+    constexpr double kTurnVoltageToRadians = 2.0 * wpi::math::pi / 4.93;    // Absolute encoder runs 0 to 4.93V
     constexpr double KTurnVoltageToDegrees = 360 / 4.93;
+
+    constexpr double kDriveGearRatio = 8.31;                //!< MK2 swerve modules 11.9 ft/sec
+    //constexpr double kDriveGearRatio = 8.16;                //!< MK3 swerve modules w/NEOs 12.1 ft/sec
+    //constexpr double kDriveGearRatio = 6.86;                //!< MK3 swerve modules w/NEOs 14.4 ft/sec
+    constexpr double kTurnMotorRevsPerWheelRev = 18.0;
 }  // namespace DriveConstants
 
 namespace ModuleConstants
@@ -106,7 +111,7 @@ namespace AutoConstants
 {
     using radians_per_second_squared_t = units::compound_unit<units::radians, units::inverse<units::squared<units::second>>>;
 
-    constexpr auto kMaxSpeed = units::meters_per_second_t(0.5);
+    constexpr auto kMaxSpeed = units::meters_per_second_t(0.7);
     constexpr auto kMaxAcceleration = units::meters_per_second_squared_t(1.0);
     constexpr auto kMaxAngularSpeed = units::radians_per_second_t(wpi::math::pi);
     constexpr auto kMaxAngularAcceleration = units::unit_t<radians_per_second_squared_t>(wpi::math::pi);
@@ -120,5 +125,8 @@ namespace AutoConstants
 
 namespace OIConstants
 {
+    constexpr double kDeadzoneX = 0.10;
+    constexpr double kDeadzoneY = 0.10;
+    constexpr double kDeadzoneRot = 0.10;
     constexpr int kDriverControllerPort = 0;
 }  // namespace OIConstants

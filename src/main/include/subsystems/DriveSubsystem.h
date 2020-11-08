@@ -20,7 +20,11 @@
 #include "SwerveModule.h"
 #include "Logger.h"
 
-enum EDriveSubSystemLogData
+// For each enum here, add a string to c_headerNamesDriveSubsystem
+// and a line like this: 
+//      m_logData[EDriveSubSystemLogData::e???] = ???;
+// to DriveSubsystem::Periodic
+enum class EDriveSubSystemLogData : int
 {
     eFirstInt
   , eLastInt = eFirstInt
@@ -35,7 +39,7 @@ enum EDriveSubSystemLogData
   , eLastDouble
 };
 
-const std::vector<std::string> c_headerNames{ "InputX", "InputY", "InputRot", "OdoX", "OdoY", "OdoRot"};
+const std::vector<std::string> c_headerNamesDriveSubsystem{ "InputX", "InputY", "InputRot", "OdoX", "OdoY", "OdoRot"};
 
 class DriveSubsystem : public frc2::SubsystemBase
 {
@@ -101,11 +105,11 @@ public:
         frc::Translation2d(-kWheelBase / 2,  kTrackWidth / 2),    // -x, +y RL
         frc::Translation2d(-kWheelBase / 2, -kTrackWidth / 2)};   // -x, -y RR
 
-private:
+private:    
     using LogData = LogDataT<EDriveSubSystemLogData>;
-    
+
     Logger& m_log;
-    bool m_bLoggedHeader = false;
+    LogData m_logData;
 
     SwerveModule m_frontLeft;
     SwerveModule m_frontRight;
@@ -115,5 +119,4 @@ private:
     PigeonIMU m_gyro;
     // Odometry class for tracking robot pose
     frc::SwerveDriveOdometry<DriveConstants::kNumSwerveModules> m_odometry;
-    LogData m_logData;
 };

@@ -35,13 +35,86 @@ RobotContainer::RobotContainer(Logger& log)
     // Set up default drive command
     m_drive.SetDefaultCommand(frc2::RunCommand(
         [this] {
-            m_drive.Drive(units::meters_per_second_t(m_driverController.GetY(frc::GenericHID::kLeftHand) * -1.0),
-                          units::meters_per_second_t(m_driverController.GetX(frc::GenericHID::kLeftHand) * -1.0),
-                          units::radians_per_second_t(m_driverController.GetX(frc::GenericHID::kRightHand)),
+
+//#define USE_BUTTONS
+#ifdef USE_BUTTONS
+            // Push button control to diagnose swerve angle accuracy
+            double xInput = 0.0;
+            const double c_buttonInputSpeed = 0.5;
+            if (m_driverController.GetYButton())
+            {
+                xInput = c_buttonInputSpeed;
+            }
+            else if (m_driverController.GetAButton())
+            {
+                xInput = -1.0 * c_buttonInputSpeed;
+            }
+            double yInput = 0.0;
+            if (m_driverController.GetXButton())
+            {
+                yInput = c_buttonInputSpeed;
+            }
+            else if (m_driverController.GetBButton())
+            {
+                yInput = -1.0 * c_buttonInputSpeed;
+            }
+
+            double rotInput = 0.0;
+            //            U
+            //            0
+            //            |
+            //    UL 315\ | /45 UR
+            //           \|/
+            // L 270------+------90 R
+            //           /|\ 
+            //    DL 225/ | \135 DR
+            //            |
+            //           180
+            //            D
+            auto dPadPointOfView = m_driverController.GetPOV();
+            if (dPadPointOfView >= 225 && dPadPointOfView <= 315)
+            {
+                rotInput = 1.0;
+            }
+            else if (dPadPointOfView >= 45 && dPadPointOfView <= 135)
+            {
+                rotInput = -1.0;
+            }
+#else
+            // up is xbox joystick y pos
+            // left is xbox joystick x pos
+            auto xInput = Deadzone(m_driverController.GetY(frc::GenericHID::kLeftHand) * -1.0, OIConstants::kDeadzoneX);
+            auto yInput = Deadzone(m_driverController.GetX(frc::GenericHID::kLeftHand) * -1.0, OIConstants::kDeadzoneY);
+            auto rotInput = Deadzone(m_driverController.GetX(frc::GenericHID::kRightHand), OIConstants::kDeadzoneRot);
+
+#endif
+
+            m_inputXentry.SetDouble(xInput);
+            m_inputYentry.SetDouble(yInput);
+            m_inputRotentry.SetDouble(rotInput);
+
+            /// \todo Scale +/-1.0 xbox input to kMaxSpeed
+            m_drive.Drive(units::meters_per_second_t(xInput),
+                          units::meters_per_second_t(yInput),
+                          units::radians_per_second_t(rotInput),
                           false);
         },
         {&m_drive}
     ));
+
+    ShuffleboardTab& tab = Shuffleboard::GetTab("XboxInput");
+    m_inputXentry = tab.Add("X", 0).GetEntry();
+    m_inputYentry = tab.Add("Y", 0).GetEntry();
+    m_inputRotentry = tab.Add("Rot", 0).GetEntry();
+
+    // The roboRIO does not have a battery powered RTC. However, the DS sends the time when it connects, which the roboRIO uses to set the system time. If you wait until the DS connects, you can have correct timestamps, without a RTC.
+    double matchTime = frc::Timer::GetMatchTime();
+    printf("Match time %.3f\n", matchTime);
+
+    // Shuffleboard::GetTab("Preround").Add("Partner can scale", false)
+    //                                 .WithWidget(frc::BuiltInWidgets::kSplitButtonChooser)
+    //                                 .WithSize(2, 1)     // Widget size on shuffleboard
+    //                                 .WithPosition(0,0); // Widget position on shuffleboard
 }
 
 void RobotContainer::ConfigureButtonBindings()
