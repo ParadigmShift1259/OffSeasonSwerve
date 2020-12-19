@@ -88,6 +88,7 @@ void SwerveModule::SetDesiredState(frc::SwerveModuleState &state)
 #else
     double minTurnRads = MinTurnRads(currentPosition, state.angle.Radians().to<double>(), bOutputReverse);
 #endif
+    SmartDashboard::PutNumber("bOutputReverse", bOutputReverse);
     double direction = 1.0;
     if (bOutputReverse)
         direction = -1.0;
@@ -194,13 +195,17 @@ double SwerveModule::MinTurnRads(double init, double final, bool& bOutputReverse
     double angle1 = final - init;
     double angle2 = final + wpi::math::pi - init;
 
-    NegPiToPiRads(angle1);
-    NegPiToPiRads(angle2);
+    angle1 = NegPiToPiRads(angle1);
+    angle2 = NegPiToPiRads(angle2);
 
     // Choose the smallest angle and determine reverse flag
     if (fabs(angle1) <= fabs(angle2))
     {
         bOutputReverse = false;
+        if (angle1 > M_PI)
+        {
+            printf("Angle1: %f Final: %f Init: %f\n", angle1, final, init);
+        }
         return angle1;
     } 
     else
