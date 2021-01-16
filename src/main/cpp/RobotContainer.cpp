@@ -101,6 +101,8 @@ RobotContainer::RobotContainer(Logger& log)
             auto xInput = Deadzone(m_driverController.GetY(frc::GenericHID::kLeftHand) * -1.0, OIConstants::kDeadzoneX);
             auto yInput = Deadzone(m_driverController.GetX(frc::GenericHID::kLeftHand) * -1.0, OIConstants::kDeadzoneY);
             auto rotInput = Deadzone(m_driverController.GetX(frc::GenericHID::kRightHand) * -1.0, OIConstants::kDeadzoneRot);
+            auto xRot = Deadzone(m_driverController.GetY(frc::GenericHID::kRightHand) * -1.0, OIConstants::kDeadzoneRot);
+            auto yRot = Deadzone(m_driverController.GetX(frc::GenericHID::kRightHand) * -1.0, OIConstants::kDeadzoneRot);
 
 #endif
 
@@ -109,10 +111,22 @@ RobotContainer::RobotContainer(Logger& log)
             m_inputRotentry.SetDouble(rotInput);
 
             /// \todo Scale +/-1.0 xbox input to kMaxSpeed
-            m_drive.Drive(units::meters_per_second_t(xInput * AutoConstants::kMaxSpeed),
-                          units::meters_per_second_t(yInput * AutoConstants::kMaxSpeed),
-                          units::radians_per_second_t(rotInput),
-                          m_fieldRelative);
+            if (m_fieldRelative)
+            {
+                m_drive.RotationDrive(units::meters_per_second_t(xInput * AutoConstants::kMaxSpeed),
+                            units::meters_per_second_t(yInput * AutoConstants::kMaxSpeed),
+                            xRot,
+                            yRot,
+                            m_fieldRelative);
+            }
+            else 
+            {
+                m_drive.Drive(units::meters_per_second_t(xInput * AutoConstants::kMaxSpeed),
+                            units::meters_per_second_t(yInput * AutoConstants::kMaxSpeed),
+                            units::radians_per_second_t(rotInput),
+                            m_fieldRelative);
+            }
+
         },
         {&m_drive}
     ));

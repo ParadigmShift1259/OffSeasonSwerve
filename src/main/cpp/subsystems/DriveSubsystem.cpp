@@ -9,6 +9,7 @@
 
 #include <frc/geometry/Rotation2d.h>
 #include <units/units.h>
+#include <wpi/math>
 
 #include "Constants.h"
 #include <iostream>
@@ -118,6 +119,19 @@ void DriveSubsystem::Periodic()
     m_frontRight.Periodic();
     m_rearRight.Periodic();
     m_rearLeft.Periodic();
+}
+
+void DriveSubsystem::RotationDrive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, double xRot, double yRot, bool fieldRelative) {
+    radian_t rotPosition = radian_t(atan2f(yRot, xRot));
+    double rotDifference = rotPosition.to<double>() - GetHeadingAsRot2d().Radians().to<double>();
+    double theta = rotDifference;
+    if (theta > wpi::math::pi)
+        theta -= 2 * wpi::math::pi;
+    else if (theta < -1.0 * wpi::math::pi)
+        theta += 2 * wpi::math::pi;
+    
+    SmartDashboard::PutNumber("TEST_Rotation Difference", theta);
+    Drive(xSpeed, ySpeed, radians_per_second_t(theta * 0.5), fieldRelative);
 }
 
 void DriveSubsystem::Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative)
