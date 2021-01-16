@@ -188,7 +188,7 @@ double SwerveModule::NegPiToPiRads(double theta)
         theta -= 2 * wpi::math::pi;
     else if (theta < -1.0 * wpi::math::pi)
         theta += 2 * wpi::math::pi;
-        
+    
     return theta;
 }
 
@@ -206,12 +206,13 @@ double SwerveModule::MinTurnRads(double init, double final, bool& bOutputReverse
     double angle1 = final - init;
     double angle2 = final + wpi::math::pi - init;
 
-    NegPiToPiRads(angle1);
-    NegPiToPiRads(angle2);
+    angle1 = NegPiToPiRads(angle1);
+    angle2 = NegPiToPiRads(angle2);
 
     // Choose the smallest angle and determine reverse flag
-    //CHANGED 1/16/21
-    if (fabs(angle1))// <= fabs(angle2))
+    //TODO: FINISHED ROBOT TUNING
+    // Eventually prefer angle 1 always during high speed to prevent 180s
+    if (fabs(angle1) <= 2 * fabs(angle2))
     {
         bOutputReverse = false;
 
