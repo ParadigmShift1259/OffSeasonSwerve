@@ -154,7 +154,9 @@ void SwerveModule::ResetEncoders()
 
 double SwerveModule::VoltageToRadians(double Voltage, double offset)
 {
+#ifdef TUNE_ABS_ENC
     offset = m_nteAbsEncTuningOffset.GetDouble(m_offset);
+#endif
     double angle = fmod(Voltage * DriveConstants::kTurnVoltageToRadians - offset + 2 * wpi::math::pi, 2 * wpi::math::pi);
     angle = 2 * wpi::math::pi - angle;
 
@@ -208,9 +210,11 @@ double SwerveModule::MinTurnRads(double init, double final, bool& bOutputReverse
     NegPiToPiRads(angle2);
 
     // Choose the smallest angle and determine reverse flag
-    if (fabs(angle1) <= fabs(angle2))
+    //CHANGED 1/16/21
+    if (fabs(angle1))// <= fabs(angle2))
     {
         bOutputReverse = false;
+
         return angle1;
     } 
     else

@@ -75,5 +75,4 @@ private:
 
     frc2::InstantCommand m_enableFieldRelative{[this] () { m_fieldRelative = true; }};
     frc2::InstantCommand m_disableFieldRelative{[this] () { m_fieldRelative = false; }};
-    frc2::InstantCommand *m_driveForward;
 };

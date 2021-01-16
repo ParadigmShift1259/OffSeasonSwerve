@@ -21,6 +21,8 @@
 #include "Constants.h"
 #include "subsystems/DriveSubsystem.h"
 
+#include "commands/DriveForward.h"
+
 using namespace DriveConstants;
 
 RobotContainer::RobotContainer(Logger& log)
@@ -28,19 +30,18 @@ RobotContainer::RobotContainer(Logger& log)
     , m_drive(log)
 {
     // Initialize all of your commands and subsystems here
-    double c_buttonInputSpeed = 2.0;
-    m_driveForward = new frc2::StartEndCommand(
+
+    //m_driveForward = m_driveForward.WithTimeout(2.0_s);
+    /*
+    m_driveForward = new frc2::RunCommand(
         [this, c_buttonInputSpeed] () {
             m_drive.Drive(units::meters_per_second_t(c_buttonInputSpeed),
                             units::meters_per_second_t(0),
                             units::radians_per_second_t(0),
-                            m_fieldRelative),
-            m_drive.Drive(units::meters_per_second_t(0),
-                        units::meters_per_second_t(0),
-                        units::radians_per_second_t(0),
-                        m_fieldRelative),
-        }
-    ).withTimeout(5);
+                            m_fieldRelative);
+        },
+        {&m_drive}
+    );*/
 
     // Configure the button bindings
     ConfigureButtonBindings();
@@ -135,12 +136,52 @@ void RobotContainer::ConfigureButtonBindings()
 {
     
     // Configure your button bindings here
-    //frc2::XboxController::Button([this] () { return m_driverController; }, 5);
-    //frc2::Button([this] () { return m_driverController.GetBumper(left); }).WhenHeld(&m_enableFieldRelative);
-    //frc2::Button([this] () { return m_driverController.GetBumper(left); }).WhenReleased(&m_disableFieldRelative);
     (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kBumperLeft).WhenHeld(&m_enableFieldRelative));
     (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kBumperLeft).WhenReleased(&m_disableFieldRelative));
-    (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kY).WhenPressed(&m_driveForward));
+
+    double c_buttonInputSpeed = 0.5;
+    units::second_t c_buttonInputTime = 1.25_s;
+
+    frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kY).WhenPressed(
+        frc2::RunCommand(    
+            [this, c_buttonInputSpeed] {
+                m_drive.Drive(units::meters_per_second_t(c_buttonInputSpeed),
+                        units::meters_per_second_t(0),
+                        units::radians_per_second_t(0),
+                        false);
+            },
+            {&m_drive}
+        ).WithTimeout(c_buttonInputTime));
+    frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kA).WhenPressed(
+            frc2::RunCommand(    
+            [this, c_buttonInputSpeed] {
+                m_drive.Drive(units::meters_per_second_t(-c_buttonInputSpeed),
+                        units::meters_per_second_t(0),
+                        units::radians_per_second_t(0),
+                        false);
+            },
+            {&m_drive}
+        ).WithTimeout(c_buttonInputTime));
+    frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kX).WhenPressed(
+            frc2::RunCommand(    
+            [this, c_buttonInputSpeed] {
+                m_drive.Drive(units::meters_per_second_t(0),
+                        units::meters_per_second_t(c_buttonInputSpeed),
+                        units::radians_per_second_t(0),
+                        false);
+            },
+            {&m_drive}
+        ).WithTimeout(c_buttonInputTime));
+    frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kB).WhenPressed(
+            frc2::RunCommand(    
+            [this, c_buttonInputSpeed] {
+                m_drive.Drive(units::meters_per_second_t(0),
+                        units::meters_per_second_t(-c_buttonInputSpeed),
+                        units::radians_per_second_t(0),
+                        false);
+            },
+            {&m_drive}
+        ).WithTimeout(c_buttonInputTime));
 }
 
 frc2::Command *RobotContainer::GetAutonomousCommand()
