@@ -28,9 +28,23 @@ RobotContainer::RobotContainer(Logger& log)
     , m_drive(log)
 {
     // Initialize all of your commands and subsystems here
+    double c_buttonInputSpeed = 2.0;
+    m_driveForward = new frc2::StartEndCommand(
+        [this, c_buttonInputSpeed] () {
+            m_drive.Drive(units::meters_per_second_t(c_buttonInputSpeed),
+                            units::meters_per_second_t(0),
+                            units::radians_per_second_t(0),
+                            m_fieldRelative),
+            m_drive.Drive(units::meters_per_second_t(0),
+                        units::meters_per_second_t(0),
+                        units::radians_per_second_t(0),
+                        m_fieldRelative),
+        }
+    ).withTimeout(5);
 
     // Configure the button bindings
     ConfigureButtonBindings();
+    m_fieldRelative = false;
 
     // Set up default drive command
     m_drive.SetDefaultCommand(frc2::RunCommand(
@@ -97,7 +111,7 @@ RobotContainer::RobotContainer(Logger& log)
             m_drive.Drive(units::meters_per_second_t(xInput * AutoConstants::kMaxSpeed),
                           units::meters_per_second_t(yInput * AutoConstants::kMaxSpeed),
                           units::radians_per_second_t(rotInput),
-                          true);
+                          m_fieldRelative);
         },
         {&m_drive}
     ));
@@ -119,7 +133,14 @@ RobotContainer::RobotContainer(Logger& log)
 
 void RobotContainer::ConfigureButtonBindings()
 {
+    
     // Configure your button bindings here
+    //frc2::XboxController::Button([this] () { return m_driverController; }, 5);
+    //frc2::Button([this] () { return m_driverController.GetBumper(left); }).WhenHeld(&m_enableFieldRelative);
+    //frc2::Button([this] () { return m_driverController.GetBumper(left); }).WhenReleased(&m_disableFieldRelative);
+    (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kBumperLeft).WhenHeld(&m_enableFieldRelative));
+    (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kBumperLeft).WhenReleased(&m_disableFieldRelative));
+    (frc2::JoystickButton(&m_driverController, (int)frc::XboxController::Button::kY).WhenPressed(&m_driveForward));
 }
 
 frc2::Command *RobotContainer::GetAutonomousCommand()
