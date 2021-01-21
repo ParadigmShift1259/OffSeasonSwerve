@@ -69,7 +69,14 @@ public:
     /// @param fieldRelative Whether the provided x and y speeds are relative to the field.
     void Drive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, radians_per_second_t rot, bool fieldRelative);
 
-    // Drives the robot with the right stick controlling the angle of the robot
+    // Drives the robot with the right stick controlling the position angle of the robot
+    ///
+    /// @param xSpeed        Speed of the robot in the x direction
+    ///                      (forward/backwards).
+    /// @param ySpeed        Speed of the robot in the y direction (sideways).
+    /// @param xRot          Angle of the robot on the x axis
+    /// @param yRot          Angle of the robot on the y axis
+    /// @param fieldRelative Whether the provided translational speeds are relative to the field.
     void RotationDrive(meters_per_second_t xSpeed, meters_per_second_t ySpeed, double xRot, double yRot, bool fieldRelative);
 
     /// Resets the drive encoders to currently read a position of 0.
